@@ -1,0 +1,8 @@
+{
+    "GMAIL_HOST": "smtp.gmail.com",
+    "GMAIL_PORT": 587,
+    "GMAIL_USER": "contacto@tumerka.pe",
+    "GMAIL_PASS": "g3dLtcn#D@2uQd23",
+    "FROM_ADDRESS": "TuMerka <contacto@tumerka.pe>",
+    "BCC_ADDRESS": "contacto@drago.pe"
+}

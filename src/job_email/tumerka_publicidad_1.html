@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .header img {
+            max-width: 100px;
+        }
+        .content {
+            padding: 20px;
+        }
+        .content h1 {
+            color: #333333;
+        }
+        .content p {
+            color: #555555;
+        }
+        .image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #aaaaaa;
+        }
+        .images-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .images-table td {
+            padding: 10px;
+            text-align: center;
+        }
+        .images-table img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="{{logo_link}}"><img src="{{logo_image}}" alt="Logo"></a>
+        </div>
+        <div class="content">
+            <h1>Promociones Especiales</h1>
+            <p>Estimado {{username}},</p>
+            <p>Explora nuestras ofertas especiales:</p>
+            <table class="images-table">
+                <tr>
+                    <td><a href="{{link1}}"><img src="{{image1}}" alt="Imagen 1"></a></td>
+                    <td><a href="{{link2}}"><img src="{{image2}}" alt="Imagen 2"></a></td>
+                    <td><a href="{{link3}}"><img src="{{image3}}" alt="Imagen 3"></a></td>
+                </tr>
+                <tr>
+                    <td><a href="{{link4}}"><img src="{{image4}}" alt="Imagen 1"></a></td>
+                    <td><a href="{{link5}}"><img src="{{image5}}" alt="Imagen 2"></a></td>
+                </tr>
+                <tr>
+                    <td><a href="{{link6}}"><img src="{{image6}}" alt="Imagen 3"></a></td>
+                    <td><a href="{{link7}}"><img src="{{image7}}" alt="Imagen 4"></a></td>
+                </tr>
+            </table>
+            <p>Saludos cordiales,</p>
+            <p>El equipo de tumerka.pe</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 tumerka.pe. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>
