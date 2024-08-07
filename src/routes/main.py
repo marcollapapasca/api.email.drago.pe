@@ -23,3 +23,6 @@ def handle_send_email():
     gmail.send_email(config, to_address, event_type, data)
     return jsonify({"message": "Email enviado satisfactoriamente"}), 200
 
+@main.route("/")
+def static_page_index():
+    return 'Hola'
