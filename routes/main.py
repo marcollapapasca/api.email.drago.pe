@@ -10,17 +10,19 @@ gmail = Gmail()
 def handle_send_email():
     data = request.json
     # config_path = 'config.json'
-    config_path = data.get("config_smtp")
-    config = gmail.load_config(config_path)
     to_address = data.get("to_address")
-    print("to_address")
-    print(to_address)
+    sku = data.get("sku")
+    template_path = sku + ".html"
+    config_smtp = sku.split('_')[0] +"_smtp.json"
+    event_type = sku
 
-    event_type = data.get("event_type")
-    if not to_address or not event_type:
+    if not sku or not to_address:
         return jsonify({"error": "Error de validación"}), 400
 
-    gmail.send_email(config, to_address, event_type, data)
+    
+    config = gmail.load_config(config_smtp)
+
+    gmail.send_email(config, event_type, data, template_path)
     return jsonify({"message": "Email enviado satisfactoriamente"}), 200
 
 @main.route("/")
