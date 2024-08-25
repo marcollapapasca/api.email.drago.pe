@@ -1,0 +1,89 @@
+sku: tumerka_subscription
+to_address: ronallapapasca@gmail.com
+gmail_user: contacto@tumerka.pe
+html: <!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .header img {
+            max-width: 250px;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .content h1 {
+            color: #333333;
+        }
+
+        .content p {
+            color: #555555;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #aaaaaa;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="https://tumerka.pe">
+                <img src="https://dcn5i49zim2n2.cloudfront.net/tumerka/brand/logo/tumerka.png" alt="TuMerka Logo" />
+            </a>
+        </div>
+        <div class="content">
+            <h1>¡Gracias por suscribirte!</h1>
+            <p>Recibiras contenido exclusivo sobre nuestros productos, promociones y actualizaciones.</p>
+            <h2>¿Qué puedes esperar?</h2>
+            <ul>
+                <li><strong>Exclusivas</strong></li>
+                <p>Sé el primero en enterarte de nuestras promociones especiales y descuentos.</p>
+                <li><strong>Nuevos Productos</strong></li>
+                <p>Descubre nuestros lanzamientos antes que nadie.</p>
+                <li><strong>Actualizaciones</strong></li>
+                <p>Mantente informado sobre las últimas novedades y mejoras en nuestros servicios.</p>
+            </ul>
+            <h2>¿Tienes alguna pregunta?</h2>
+            <p>Si tienes alguna duda o necesitas asistencia, no dudes en contactarnos a través de nuestro correo
+                electrónico contacto@tumerka.pe o escribenos al WhatsApp: <a
+                    href="https://api.whatsapp.com/send?phone=+51983771946&text=Te%20escribo%20desde%20el%20correo%20de%20subscripci%C3%B3n!!!">+51
+                    983 771 946</a></p>
+            <p>Saludos cordiales,</p>
+            <p>El equipo de tumerka.pe</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 tumerka.pe. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+
+</html>

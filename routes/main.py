@@ -13,8 +13,9 @@ def handle_send_email():
     to_address = data.get("to_address")
     sku = data.get("sku")
     template_path = sku + ".html"
-    config_smtp = sku.split('_')[0] +"_smtp.json"
-    event_type = sku
+    config_smtp = sku.split('_')[0] + "_smtp.json"
+    event_type = '_'.join(sku.split('_')[1:])
+    print(event_type)
 
     if not sku or not to_address:
         return jsonify({"error": "Error de validación"}), 400
@@ -23,6 +24,7 @@ def handle_send_email():
     config = gmail.load_config(config_smtp)
 
     gmail.send_email(config, event_type, data, template_path)
+  
     return jsonify({"message": "Email enviado satisfactoriamente"}), 200
 
 @main.route("/")

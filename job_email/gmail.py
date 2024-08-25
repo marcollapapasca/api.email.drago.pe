@@ -6,6 +6,8 @@ from email.mime.base import MIMEBase
 from email import encoders
 import os
 
+from database.save_email import EmailService
+save_email = EmailService().save_email
 
 class Gmail:
 
@@ -19,8 +21,10 @@ class Gmail:
     def load_html_template(self, template_path):
         with open(os.path.join(os.path.dirname(__file__), template_path),"r",encoding="utf-8") as file:
             return file.read()
+        
 
     def send_email(self, config, event_type, data, template_path):
+               
         msg = MIMEMultipart()
         msg["From"] = config["FROM_ADDRESS"]
         msg["To"] = data.get("to_address")
@@ -33,15 +37,21 @@ class Gmail:
                 username = data.get("username", "Nuevo Usuario")
                 body_html = template_html.replace("{{username}}", username)
                 msg.attach(MIMEText(body_html, "html"))
+
+                save_email(data, config, body_html)
         elif event_type == "new_member":
                 msg["Subject"] = "¡Bienvenido al Marketplace tumerka.pe!"
                 username = data.get("username", "Nuevo Usuario")
                 body_html = template_html.replace("{{username}}", username)
                 msg.attach(MIMEText(body_html, "html"))
+
+                save_email(data, config, body_html)
         elif event_type =="subscription":
                 msg["Subject"] = "¡Gracias por suscribirte!"
                 body_html = template_html
                 msg.attach(MIMEText(body_html, "html"))
+
+                save_email(data, config, body_html)
         elif event_type =="invoice":
                 msg["Subject"] = "Su comprobante está disponible"
                 customer_name = data.get("customer_name", "Cliente")
@@ -56,6 +66,8 @@ class Gmail:
                 body_html = body_html.replace("{{issue_date}}", issue_date)
 
                 msg.attach(MIMEText(body_html, "html"))
+
+                save_email(data, config, body_html)
 
                 try:
                     with open(attachment_path, "rb") as attachment_file:
@@ -91,6 +103,8 @@ class Gmail:
                 body_html = body_html.replace("{{shipping_cost}}", shipping_cost)
                 body_html = body_html.replace("{{total_amount}}", total_amount)
                 msg.attach(MIMEText(body_html, "html"))
+
+                save_email(data, config, body_html)
         elif event_type =="send_order_seller":
                 msg["Subject"] = "Tienes un nuevo pedido"
 
@@ -118,6 +132,8 @@ class Gmail:
                 body_html = body_html.replace("{{order_items}}", order_items_html )
                 body_html = body_html.replace("{{total_amount}}", total_amount)
                 msg.attach(MIMEText(body_html, "html"))
+
+                save_email(data, config, body_html)
         elif event_type =="new_password":
                 msg["Subject"] = "Solicitud de Cambio de Contraseña"
 
@@ -127,6 +143,8 @@ class Gmail:
                 body_html = template_html.replace("{{username}}", customer_name)
                 body_html = body_html.replace("{{reset_link}}", reset_link)
                 msg.attach(MIMEText(body_html, "html"))
+
+                save_email(data, config, body_html)
         elif event_type =="new_password_confirmation":
                 msg["Subject"] = "Confirmación de Cambio de Contraseña"
 
@@ -134,6 +152,8 @@ class Gmail:
 
                 body_html = template_html.replace("{{username}}", customer_name)
                 msg.attach(MIMEText(body_html, "html"))
+
+                save_email(data, config, body_html)
         elif event_type =="publicidad_1":
                 msg["Subject"] = "Publicidad 1"
 
@@ -148,6 +168,8 @@ class Gmail:
                     body_html = body_html.replace(f"{{{{{key}}}}}", value)
 
                 msg.attach(MIMEText(body_html, "html"))
+
+                save_email(data, config, body_html)
         elif event_type =="tumerka_welcome_new_seller":
                 seller_name = data.get("seller_name", "Seller")
 
@@ -161,6 +183,8 @@ class Gmail:
                 body_html = body_html.replace("{{seller_email}}", seller_email)
                 
                 msg.attach(MIMEText(body_html, "html"))
+
+                save_email(data, config, body_html)
         elif event_type =="tumerka_seller_accept_contract":
                 seller_name = data.get("seller_name", "Seller")
                 msg["Subject"] = "¡Contrato Aceptado!"
@@ -168,16 +192,19 @@ class Gmail:
                 body_html = template_html.replace("{{seller_name}}", seller_name)
                   
                 msg.attach(MIMEText(body_html, "html"))
+
+                save_email(data, config, body_html)
+
         else:
                 print("Unknown event type")
 
         try:
-            server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"])
-            server.starttls()
-            server.login(config["GMAIL_USER"], config["GMAIL_PASS"])
-            server.send_message(msg)
+            # server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"])
+            # server.starttls()
+            # server.login(config["GMAIL_USER"], config["GMAIL_PASS"])
+            # server.send_message(msg)
             print("Correo enviado exitosamente")
         except Exception as e:
             print(f"Error al enviar el correo: {e}")
-        finally:
-            server.quit()
+        # finally:
+        #     server.quit()
