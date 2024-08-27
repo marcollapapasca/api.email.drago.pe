@@ -1,5 +1,4 @@
- 
-from flask import Blueprint, request, jsonify, send_from_directory
+from flask import Blueprint, request, jsonify, send_from_directory 
 from job_email.gmail import Gmail
 
 main = Blueprint("main", __name__)
@@ -29,4 +28,4 @@ def handle_send_email():
 
 @main.route("/")
 def static_page_index():
-    return 'Hola'
+    return 'Holas'

@@ -29,11 +29,9 @@ app.config["PORT"] = int(os.getenv("SERVICE_PORT", 3006))
 if env == 'development':
     app.config['DEBUG'] = True
     app.config['ENV'] = 'development'
-    # Otras configuraciones específicas para desarrollo
 elif env == 'production':
     app.config['DEBUG'] = False
     app.config['ENV'] = 'production'
-    # Otras configuraciones específicas para producción
 else:
     raise ValueError("No se ha establecido un entorno válido en la variable FLASK_ENV")
 
