@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .header img {
+            max-width: 250px;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .content h1 {
+            color: #333333;
+        }
+
+        .content p {
+            color: #555555;
+        }
+
+        .important {
+            background-color: #ffffcc;
+            border-left: 4px solid #ffcc00;
+            padding: 10px;
+            margin-top: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #aaaaaa;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            background-color: #28a745;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #218838;
+        }
+
+        .checklist {
+            margin: 20px 0;
+            padding-left: 20px;
+        }
+
+        .checklist li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="https://tumerka.pe">
+                <img src="https://dcn5i49zim2n2.cloudfront.net/tumerka/brand/logo/tumerka.png" alt="TuMerka Logo" />
+            </a>
+        </div>
+        <div class="content">
+            <h1>Bienvenido a TuMerka, {{seller_name}}!</h1>
+            <p>Estimado {{seller_name}},</p>
+            <p>
+                Nos complace darte la bienvenida como nuevo vendedor en nuestro Marketplace. Estamos encantados de
+                contar contigo para ofrecer productos de calidad a nuestros clientes.
+            </p>
+            <p>
+                Luego de la aprobación de tu cuenta, ya podrás ingresar y comenzar a cargar el logo y banner de tu
+                tienda, además de poder registrar tus productos o servicios.
+            </p>
+            <p>
+                Aquí puedes encontrar los productos en tu tienda: <a href="{{store_url}}">{{store_url}}</a>.
+            </p>
+            <p>
+                Tu usuario de acceso es tu email: <strong>{{email}}</strong> y tu contraseña inicial es el DNI
+                registrado.
+            </p>
+            <div class="important">
+                <strong>Recuerda:</strong> Todos nuestros vendedores cuentan con asistencia personalizada por parte de
+                nuestro área de marketing, listos para ayudarte a editar y optimizar el logo, banner y fotografías de
+                tus productos o servicios.
+            </div>
+            <p>
+                Dentro de la plataforma, podrás:
+            </p>
+            <ul class="checklist">
+                <li>Gestionar tus productos o servicios</li>
+                <li>Acceder a reportes de navegación TuMerka</li>
+                <li>Acceder a reportes de Alcance en Google Ads</li>
+                <li>Acceder a reportes de cotización</li>
+                <li>Acceder a reportes de pedidos</li>
+            </ul>
+            <a href="https://seller.tumerka.pe/" class="btn">Acceder a Mi Cuenta</a>
+            <p>
+                Si tienes alguna pregunta o necesitas asistencia, no dudes en
+                contactarnos a través de nuestro WhatsApp: <a href="https://wa.me/51983771946">983 771 946</a>.
+            </p>
+            <p>Saludos cordiales,</p>
+            <p>El equipo de TuMerka</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 TuMerka. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+
+</html>

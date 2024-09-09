@@ -44,14 +44,27 @@ class Gmail:
         elif event_type =="welcome_new_seller":
                 seller_name = data.get("seller_name", "Seller")
 
+                msg["Subject"] = "Hemos recibido tu solicitud"
+
+                service_type = data.get("service_type", "")
+
+                body_html = template_html.replace("{{seller_name}}", seller_name) 
+                body_html = body_html.replace("{{service_type}}", service_type) 
+                
+                msg.attach(MIMEText(body_html, "html"))
+        elif event_type =="welcome_new_seller_approved":
+                seller_name = data.get("seller_name", "Seller")
+
                 msg["Subject"] = "Bienvenido a TuMerka, " + seller_name
 
-                store_name = data.get("store_name", "")
-                seller_email = data.get("seller_email", "")
+                service_type = data.get("service_type", "") 
+                store_url = data.get("store_url", "")
+                email = data.get("email", "")
 
-                body_html = template_html.replace("{{seller_name}}", seller_name)
-                body_html = body_html.replace("{{store_name}}", store_name)
-                body_html = body_html.replace("{{seller_email}}", seller_email)
+                body_html = template_html.replace("{{seller_name}}", seller_name) 
+                body_html = body_html.replace("{{service_type}}", service_type)
+                body_html = body_html.replace("{{store_url}}", store_url)
+                body_html = body_html.replace("{{email}}", email) 
                 
                 msg.attach(MIMEText(body_html, "html"))
         elif event_type =="welcome_new_subscription":
