@@ -141,7 +141,7 @@ class Gmail:
                 order_items = data.get("order_items", [])
 
                 # total_amount = data.get("total_amount", "0.00")
-                total_amount=0
+                total_amount=0.00
                 # Construye la tabla HTML para order_items
                 order_items_html = ""
                 for item in order_items:
