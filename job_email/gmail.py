@@ -146,7 +146,7 @@ class Gmail:
                 order_items_html = ""
                 for item in order_items:
                     order_items_html += f"<tr><td>{item['sku']}</td><td>{item['product_name']}</td><td>{item['quantity']}</td><td>{item['price_unit']}</td><td>{item['price_total']}</td></tr>"
-                    total_amount += float(item['price_total'])
+                    total_amount += float(item['price_total'].replace(",", "."))
 
                 body_html = template_html.replace("{{order_number}}", order_number)
                 body_html = body_html.replace("{{seller_name}}", seller_name)
