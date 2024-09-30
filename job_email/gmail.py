@@ -156,7 +156,7 @@ class Gmail:
                 body_html = body_html.replace("{{customer_name}}", customer_name)
                 body_html = body_html.replace("{{delivery_address}}", delivery_address)
                 body_html = body_html.replace("{{order_items}}", order_items_html )
-                body_html = body_html.replace("{{total_amount}}", total_amount)
+                body_html = body_html.replace("{{total_amount}}", str(total_amount))
                 msg.attach(MIMEText(body_html, "html"))
         elif event_type =="password_change":
                 msg["Subject"] = "Solicitud de Cambio de Contraseña"
