@@ -131,8 +131,8 @@ class Gmail:
         elif event_type =="new_order_seller":
                 msg["Subject"] = "Tienes un nuevo pedido"
 
-                order_number = data.get("order_number", "Orden")
-                seller_name = data.get("seller_name", "Seller")
+                order_number = data.get("order_number", "-")
+                seller_name = data.get("seller_name", "-")
                 document_type_name = data.get("document_type_name", "")
                 document_number = data.get("document_number", "")
                 customer_name = data.get("customer_name", "")
@@ -146,7 +146,7 @@ class Gmail:
                 for item in order_items:
                     order_items_html += f"<tr><td>{item['sku']}</td><td>{item['product_name']}</td><td>{item['quantity']}</td><td>{item['price_unit']}</td><td>{item['price_total']}</td></tr>"
                     total_amount +=item['price_total']
-                    
+
                 body_html = template_html.replace("{{order_number}}", order_number)
                 body_html = body_html.replace("{{seller_name}}", seller_name)
                 body_html = body_html.replace("{{document_type_name}}", document_type_name)
