@@ -103,7 +103,10 @@ class Gmail:
                 msg["Subject"] = "Confirmación de tu pedido"
 
                 customer_name = data.get("customer_name", "Cliente")
-                order_number = data.get("order_number", "Orden")
+                order_number = data.get("order_number", "")
+                document_type_name= data.get("document_type_name", "")
+                document_number = data.get("document_number", "")
+                delivery_address = data.get("delivery_address", "")
 
                 order_items = data.get("order_items", [])
                 
@@ -115,10 +118,15 @@ class Gmail:
                     order_items_html += f"<tr><td>{item['sku']}</td><td>{item['product_name']}</td><td>{item['quantity']}</td><td>{item['price_unit']}</td><td>{item['price_total']}</td></tr>"
 
                 body_html = template_html.replace("{{customer_name}}", customer_name)
+                body_html = body_html.replace("{{document_type_name}}", document_type_name)
+                body_html = body_html.replace("{{document_number}}", document_number)
+                body_html = body_html.replace("{{delivery_address}}", delivery_address)
+
                 body_html = body_html.replace("{{order_number}}", order_number)
                 body_html = body_html.replace("{{order_items}}", order_items_html)
                 body_html = body_html.replace("{{shipping_cost}}", shipping_cost)
                 body_html = body_html.replace("{{total_amount}}", total_amount)
+
                 msg.attach(MIMEText(body_html, "html"))
         elif event_type =="new_order_seller":
                 msg["Subject"] = "Tienes un nuevo pedido"
