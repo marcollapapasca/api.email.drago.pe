@@ -162,7 +162,7 @@ class Gmail:
                 msg["Subject"] = "Solicitud de Cambio de Contraseña"
 
                 customer_name = data.get("customer_name", "Cliente")
-                reset_link = data.get("reset_link", "https://tumerka.pe/reset-password")
+                reset_link = data.get("reset_link", "https://tumerka.pe/auth/reset-password")
 
                 body_html = template_html.replace("{{username}}", customer_name)
                 body_html = body_html.replace("{{reset_link}}", reset_link)
