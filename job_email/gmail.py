@@ -5,14 +5,14 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 import os
-
-from database.save_email import EmailService
-save_email = EmailService().save_email
+from datetime import datetime
+from database.save_email_v2 import EmailService
+# save_email = EmailService().save_email
 
 class Gmail:
 
     def __init__(self):
-        pass
+        self.email_service = EmailService()
 
     def load_config(self, config_path):
         with open(os.path.join(os.path.dirname(__file__),  config_path), "r") as file:
@@ -28,9 +28,12 @@ class Gmail:
         msg["From"] = config["FROM_ADDRESS"]
         msg["To"] = data.get("to_address")
         msg["Bcc"] = config["BCC_ADDRESS"]
+        to_email= data.get("to_address")
+        SENDER_EMAIL = config["GMAIL_USER"]
 
         template_html = self.load_html_template(template_path)
         body_html = None
+        body_text = None
         if event_type =="welcome_new_user":
                 msg["Subject"] = "¡Bienvenido a tumerka.pe!"
                 username = data.get("username", "Nuevo Usuario")
@@ -205,13 +208,21 @@ class Gmail:
             server.login(config["GMAIL_USER"], config["GMAIL_PASS"])
             server.send_message(msg)
 
+         
+            # save_email(data, config, body_html, "Success", message_send)
+            sent_at = datetime.now()  # Fecha y hora actual al enviar el correo
+            received_at= None
+            subject = msg["Subject"]
+            sender_user_id = self.email_service.guardar_usuario(SENDER_EMAIL, "Remitente")
+            email_id = self.email_service.guardar_correo(sender_user_id, subject, body_text, body_html, SENDER_EMAIL, False, "sent", "sent", received_at, sent_at)
+            self.email_service.guardar_destinatarios(email_id, [{"email": to_email, "type": "to"}])
+            
             message_send="Correo enviado exitosamente"
             print(message_send)
-            save_email(data, config, body_html, "Success", message_send)
         except Exception as e:
             message_send="Error al enviar el correo: {e}"
             print(message_send)
-            save_email(data, config, body_html,  "Failed",  message_send)
+        #     save_email(data, config, body_html,  "Failed",  message_send)
         # finally:
         #     server.quit()
 

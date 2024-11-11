@@ -1,9 +1,18 @@
 from flask import Blueprint, request, jsonify, send_from_directory 
 from job_email.gmail import Gmail
+from job_email.gmail_v2 import Gmail_v2
+from flask import Flask, Response
+import psycopg2
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import time
+import json
 
 main = Blueprint("main", __name__)
 
 gmail = Gmail()
+gmail_v2 = Gmail_v2()
 
 @main.route("/send_email", methods=["POST"])
 def handle_send_email():
@@ -26,6 +35,65 @@ def handle_send_email():
   
     return jsonify({"message": "Email enviado satisfactoriamente"}), 200
 
+
 @main.route("/")
 def static_page_index():
     return 'Holas'
+
+# ===============================================
+# Ruta de la API para enviar correos
+@main.route("/send-email-stream", methods=["POST"])
+def send_email():
+    data = request.json
+    config_smtp = data.get("smtp")
+    try:
+        config = gmail_v2.load_config(config_smtp)
+  
+        gmail_v2.send_email(config, data)
+        
+        return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
+    except Exception as e:
+        print(f"Error al enviar el correo: {e}")
+        return jsonify({"error": "Error al enviar el correo"}), 500
+ 
+# Detecta nuevos correos cada cierto tiempo y envía un mensaje SSE
+def event_stream():
+    last_checked_email_id = None
+
+    while True:
+        # Cargar la configuración para conectarse a Gmail
+        config = gmail_v2.load_config("config.json")  # Ruta al archivo de configuración SMTP
+        
+        # Leer los correos y obtener solo los no leídos
+        new_emails = gmail_v2.read_emails(config)
+        
+        # Filtrar los correos no leídos y enviar notificación
+        for email_data in new_emails:
+            if not email_data.get("read_status", False):  # Solo correos no leídos
+                email_info = {
+                    "email_id": email_data["email_id"],
+                    "subject": email_data["subject"],
+                    "from": email_data["from"],
+                    "received_at": email_data["received_at"]
+                }
+                yield f"data: {json.dumps(email_info)}\n\n"
+                
+        # Esperar unos segundos antes de la próxima verificación
+        time.sleep(10)
+
+@main.route('/stream')
+def stream():
+    return Response(event_stream(), mimetype="text/event-stream")
+
+
+@main.route("/read-emails", methods=["POST"])
+def read_emails():
+    data = request.json
+    config_path = data.get("smtp")  # Ruta al archivo de configuración
+    try:
+        config = gmail_v2.load_config(config_path)
+        gmail_v2.read_emails(config)
+        return jsonify({"message": "Correos leídos y guardados correctamente"}), 200
+    except Exception as e:
+        print(f"Error al leer correos: {e}")
+        return jsonify({"error": "Error al leer correos"}), 500

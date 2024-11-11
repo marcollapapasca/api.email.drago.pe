@@ -29,8 +29,8 @@ class Database:
             db_user = DB_USER
             db_password = DB_PASSWORD
 
-            print("valores db")
-            print(db_host, port, db_name, db_user, db_password)
+            # print("valores db")
+            # print(db_host, port, db_name, db_user, db_password)
 
             self.conn = psycopg2.connect(
                 host=db_host,
