@@ -62,7 +62,7 @@ def event_stream():
 
     while True:
         # Cargar la configuración para conectarse a Gmail
-        config = gmail_v2.load_config("config.json")  # Ruta al archivo de configuración SMTP
+        config = gmail_v2.load_config("tumerka_smtp.json")  # Ruta al archivo de configuración SMTP
         
         # Leer los correos y obtener solo los no leídos
         new_emails = gmail_v2.read_emails(config)
@@ -97,3 +97,28 @@ def read_emails():
     except Exception as e:
         print(f"Error al leer correos: {e}")
         return jsonify({"error": "Error al leer correos"}), 500
+    
+@main.route("/get-emails", methods=["GET"])
+def get_emails():
+    sent_status = request.args.get("type", "sent")  # Por defecto es 'input'
+    if sent_status not in ["sent", "received"]:
+        return jsonify({"error": "Invalid email type. Must be 'sent' or 'received'."}), 400
+
+    emails = gmail_v2.get_emails(sent_status)
+    return jsonify(emails), 200
+
+@main.route("/get-emails/<email_id>", methods=["GET"])
+def get_email_by_id(email_id):
+    emails = gmail_v2.get_email_by_id(email_id)
+    if emails:
+        return jsonify(emails), 200
+    else:
+        return jsonify({"error": "No emails found for the given id."}), 404
+    
+@main.route("/users", methods=["GET"])
+def get_users():
+    emails = gmail_v2.get_users()
+    if emails:
+        return jsonify(emails), 200
+    else:
+        return jsonify({"error": "No emails found for the given id."}), 404

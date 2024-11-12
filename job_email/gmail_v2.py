@@ -177,3 +177,13 @@ class Gmail_v2:
             mail.logout()
 
             return new_emails
+            
+
+    def get_emails(self, sent_status):
+        return self.email_service.get_emails(sent_status)
+    
+    def get_email_by_id(self, email_id):
+        return self.email_service.get_email_by_id(email_id)
+    
+    def get_users(self):
+        return self.email_service.get_users()

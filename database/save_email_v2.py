@@ -73,3 +73,88 @@ class EmailService:
         except Exception as e:
             print(f"Error al guardar adjuntos: {e}")
             connection.rollback()
+
+    def get_emails(self, sent_status):
+        connection = None
+        emails = []
+        try:
+            connection = self.database.get_connection()
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT email_id, subject, body_text, body_html, sender_email, received_at, sent_at, status, sent_status, read_status
+                    FROM gmail.emails
+                    WHERE sent_status = %s
+                    ORDER BY received_at DESC, sent_at DESC;
+                """, (sent_status,))
+                rows = cursor.fetchall()
+
+                for row in rows:
+                    emails.append({
+                        "email_id": row[0],
+                        "subject": row[1],
+                        "body_text": row[2],
+                        "body_html": row[3],
+                        "sender_email": row[4],
+                        "received_at": row[5],
+                        "sent_at": row[6],
+                        "status": row[7],
+                        "sent_status": row[8],
+                        "read_status": row[9]
+                    })
+            return emails
+        except Exception as e:
+            print(f"Error al obtener correos: {e}")
+            return []
+        
+    def get_email_by_id(self, email_id):
+        connection = None
+        try:
+            connection = self.database.get_connection()
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT email_id,email, subject, sender_email, received_at, sent_at, sent_status, body_text, body_html
+                    FROM gmail.emails E INNER JOIN gmail.users U ON E.user_id = U.user_id
+                    where email_id = %s
+                """, (email_id,))
+                row = cursor.fetchone()
+
+                if row:
+                    return {
+                        "email_id": row[0],
+                        "email": row[1],
+                        "subject": row[2],
+                        "sender_email": row[3],
+                        "received_at": row[4],
+                        "sent_at": row[5],
+                        "sent_status": row[6],
+                        "body_text": row[7],
+                        "body_html": row[8],
+                    }
+                else:
+                    return None
+        except Exception as e:
+            print(f"Error al obtener correos: {e}")
+            return None
+        
+    def get_users(self):
+        connection = None
+        users = []
+        try:
+            connection = self.database.get_connection()
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                     SELECT DISTINCT(email), user_id, name FROM gmail.users
+                    ORDER BY user_id ASC 
+                """)
+                rows = cursor.fetchall()
+
+                for row in rows:
+                    users.append({
+                        "email": row[0],
+                        "user_id": row[1],
+                        "name": row[2]
+                    })
+            return users
+        except Exception as e:
+            print(f"Error al obtener correos: {e}")
+            return []
