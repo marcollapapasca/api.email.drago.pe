@@ -28,14 +28,15 @@ class Gmail_v2:
         SMTP_PORT = config["GMAIL_PORT"]
         SENDER_EMAIL = config["GMAIL_USER"]
         SENDER_PASSWORD = config["GMAIL_PASS"]
-
  
-        to_email = data.get("to_address")
+        to_email = data.get("to_address", [])
         subject = data.get("subject")
         body_html = data.get("body")
         body_text = None
         attachments = data.get("attachments", [])  # Lista de adjuntos como diccionarios
-   
+
+        if not to_email:
+            return jsonify({"error": "No se especificaron destinatarios"}), 400
         # Guardar o actualizar el usuario del remitente
         # sender_email = SENDER_EMAIL  # Asumimos que el remitente es el mismo que se configura para SMTP
         sender_user_id = self.email_service.guardar_usuario(SENDER_EMAIL, "Remitente")
@@ -43,7 +44,7 @@ class Gmail_v2:
         # Crear y enviar el correo
         message = MIMEMultipart("alternative")
         message["From"] = config["FROM_ADDRESS"]
-        message["To"] = data.get("to_address")
+        message["To"] = ", ".join(to_email)
         message["Bcc"] = config["BCC_ADDRESS"]
 
         # message["From"] = sender_email
@@ -62,8 +63,8 @@ class Gmail_v2:
             message.attach(part)
         
         try:
-     
-            server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"])
+            print(message)
+            server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"], timeout=60)
             server.starttls()
             server.login(config["GMAIL_USER"], config["GMAIL_PASS"])
             server.send_message(message)
@@ -76,7 +77,9 @@ class Gmail_v2:
                 return jsonify({"error": "No se pudo guardar el correo"}), 500
             
             # Guardar destinatarios
-            self.email_service.guardar_destinatarios(email_id, [{"email": to_email, "type": "to"}])
+            destinatarios = [{"email": email, "type": "to"} for email in to_email]
+            self.email_service.guardar_destinatarios(email_id, destinatarios)
+            # self.email_service.guardar_destinatarios(email_id, [{"email": to_email, "type": "to"}])
             
             # Guardar adjuntos
             self.email_service.guardar_adjuntos(email_id, attachments)
