@@ -49,7 +49,7 @@ def send_email():
     try:
         config = gmail_v2.load_config(config_smtp)
   
-        gmail_v2.send_email(config, data)
+        gmail_v2.send_email_massive(config, data)
         
         return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
     except Exception as e:

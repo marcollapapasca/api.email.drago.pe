@@ -115,7 +115,6 @@ class Gmail_v2:
             message["From"] = config["FROM_ADDRESS"]
             message["To"] = email_user
             message["Bcc"] = config["BCC_ADDRESS"]
-
             # message["From"] = sender_email
             # message["To"] = to_email
             message["Subject"] = subject
@@ -132,7 +131,6 @@ class Gmail_v2:
                 message.attach(part)
             
             try:
-                print(message)
                 server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"], timeout=60)
                 server.starttls()
                 server.login(config["GMAIL_USER"], config["GMAIL_PASS"])
