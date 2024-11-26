@@ -110,7 +110,8 @@ class Gmail_v2:
         # sender_email = SENDER_EMAIL  # Asumimos que el remitente es el mismo que se configura para SMTP
         # sender_user_id = self.email_service.guardar_usuario(SENDER_EMAIL, "Remitente")
         try:    
-            for email_user in to_email :
+            for email_user in to_email:
+                print(email_user)
                 sender_user_id = self.email_service.guardar_usuario(email_user, "")
                 # Crear y enviar el correo
                 message = MIMEMultipart("alternative")
@@ -151,6 +152,7 @@ class Gmail_v2:
                     # Guardar adjuntos
                     self.email_service.guardar_adjuntos(email_id, attachments)
                     
+            print("Correo enviado y guardado correctamente")
             return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
         except smtplib.SMTPServerDisconnected as e:
             print(f"Error al enviar el correo: {e}")
