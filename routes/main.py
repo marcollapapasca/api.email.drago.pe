@@ -48,7 +48,7 @@ def send_email():
     config_smtp = data.get("smtp")
     try:
         config = gmail_v2.load_config(config_smtp)
-  
+        print(data)
         gmail_v2.send_email_massive(config, data)
         
         return jsonify({"message": "Correo enviado y guardado correctamente"}), 200

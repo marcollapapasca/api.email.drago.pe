@@ -102,6 +102,7 @@ class Gmail_v2:
         body_text = None
         attachments = data.get("attachments", [])  # Lista de adjuntos como diccionarios
 
+        print(to_email)
 
         if not to_email:
             return jsonify({"error": "No se especificaron destinatarios"}), 400
