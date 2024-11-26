@@ -144,6 +144,7 @@ class EmailService:
             with connection.cursor() as cursor:
                 cursor.execute("""
                      SELECT DISTINCT(email), user_id, name FROM gmail.users
+                    WHERE send_status = false AND black_list = false
                     ORDER BY user_id ASC 
                 """)
                 rows = cursor.fetchall()
