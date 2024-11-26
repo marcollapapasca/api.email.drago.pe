@@ -109,52 +109,52 @@ class Gmail_v2:
         # Guardar o actualizar el usuario del remitente
         # sender_email = SENDER_EMAIL  # Asumimos que el remitente es el mismo que se configura para SMTP
         # sender_user_id = self.email_service.guardar_usuario(SENDER_EMAIL, "Remitente")
-        
-        for email_user in to_email :
-            sender_user_id = self.email_service.guardar_usuario(email_user, "")
-            # Crear y enviar el correo
-            message = MIMEMultipart("alternative")
-            message["From"] = config["FROM_ADDRESS"]
-            message["To"] = email_user
-            message["Bcc"] = config["BCC_ADDRESS"]
-            # message["From"] = sender_email
-            # message["To"] = to_email
-            message["Subject"] = subject
-            message.attach(MIMEText(body_html, "html"))
+        try:    
+            for email_user in to_email :
+                sender_user_id = self.email_service.guardar_usuario(email_user, "")
+                # Crear y enviar el correo
+                message = MIMEMultipart("alternative")
+                message["From"] = config["FROM_ADDRESS"]
+                message["To"] = email_user
+                message["Bcc"] = config["BCC_ADDRESS"]
+                # message["From"] = sender_email
+                # message["To"] = to_email
+                message["Subject"] = subject
+                message.attach(MIMEText(body_html, "html"))
 
-            for attachment in attachments:
-                filename = attachment['filename']
-                file_type = attachment['file_type']
-                file_data = base64.b64decode(attachment['file_data'])
+                for attachment in attachments:
+                    filename = attachment['filename']
+                    file_type = attachment['file_type']
+                    file_data = base64.b64decode(attachment['file_data'])
+                    
+                    # Añadir el archivo al correo
+                    part = MIMEText(file_data, 'base64')
+                    part.add_header('Content-Disposition', f'attachment; filename="{filename}"')
+                    message.attach(part)
                 
-                # Añadir el archivo al correo
-                part = MIMEText(file_data, 'base64')
-                part.add_header('Content-Disposition', f'attachment; filename="{filename}"')
-                message.attach(part)
-            
-            try:
-                server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"], timeout=60)
-                server.starttls()
-                server.login(config["GMAIL_USER"], config["GMAIL_PASS"])
-                server.send_message(message)
-    
-                # Guardar el correo en la base de datos
-                sent_at = datetime.now()  # Fecha y hora actual al enviar el correo
-                received_at= None
-                email_id = self.email_service.guardar_correo(sender_user_id, subject, body_text, body_html, SENDER_EMAIL, False, "sent", "sent", received_at, sent_at)
-                if email_id is None:
-                    return jsonify({"error": "No se pudo guardar el correo"}), 500
-                
-                # Guardar destinatarios
-                self.email_service.guardar_destinatarios(email_id, [{"email": email_user, "type": "to"}])
-                
-                # Guardar adjuntos
-                self.email_service.guardar_adjuntos(email_id, attachments)
-                
-                return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
-            except   smtplib.SMTPServerDisconnected as e:
-                print(f"Error al enviar el correo: {e}")
-                return jsonify({"error": "Error al enviar el correo"}), 500
+
+                    server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"], timeout=60)
+                    server.starttls()
+                    server.login(config["GMAIL_USER"], config["GMAIL_PASS"])
+                    server.send_message(message)
+        
+                    # Guardar el correo en la base de datos
+                    sent_at = datetime.now()  # Fecha y hora actual al enviar el correo
+                    received_at= None
+                    email_id = self.email_service.guardar_correo(sender_user_id, subject, body_text, body_html, SENDER_EMAIL, False, "sent", "sent", received_at, sent_at)
+                    if email_id is None:
+                        return jsonify({"error": "No se pudo guardar el correo"}), 500
+                    
+                    # Guardar destinatarios
+                    self.email_service.guardar_destinatarios(email_id, [{"email": email_user, "type": "to"}])
+                    
+                    # Guardar adjuntos
+                    self.email_service.guardar_adjuntos(email_id, attachments)
+                    
+            return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
+        except smtplib.SMTPServerDisconnected as e:
+            print(f"Error al enviar el correo: {e}")
+            return jsonify({"error": "Error al enviar el correo"}), 500
         
 
     # Método para leer correos no leídos de Gmail
