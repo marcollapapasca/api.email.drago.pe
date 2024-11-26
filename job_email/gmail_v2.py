@@ -133,29 +133,29 @@ class Gmail_v2:
                 part.add_header('Content-Disposition', f'attachment; filename="{filename}"')
                 message.attach(part)
             
-                try:   
-                    server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"], timeout=60)
-                    server.starttls()
-                    server.login(config["GMAIL_USER"], config["GMAIL_PASS"])
-                    server.send_message(message)
-                    print("Correo enviado y guardado correctamente")
-                    # return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
-                except smtplib.SMTPServerDisconnected as e:
-                    print(f"Error al enviar el correo: {e}")
-                    #return jsonify({"error": "Error al enviar el correo"}), 500
+            try:   
+                server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"], timeout=60)
+                server.starttls()
+                server.login(config["GMAIL_USER"], config["GMAIL_PASS"])
+                server.send_message(message)
+                print("Correo enviado y guardado correctamente")
+                # return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
+            except smtplib.SMTPServerDisconnected as e:
+                print(f"Error al enviar el correo: {e}")
+                #return jsonify({"error": "Error al enviar el correo"}), 500
 
-                # Guardar el correo en la base de datos
-                sent_at = datetime.now()  # Fecha y hora actual al enviar el correo
-                received_at= None
-                email_id = self.email_service.guardar_correo(sender_user_id, subject, body_text, body_html, SENDER_EMAIL, False, "sent", "sent", received_at, sent_at)
-                if email_id is None:
-                    return jsonify({"error": "No se pudo guardar el correo"}), 500
-                
-                # Guardar destinatarios
-                self.email_service.guardar_destinatarios(email_id, [{"email": email_user, "type": "to"}])
-                
-                # Guardar adjuntos
-                self.email_service.guardar_adjuntos(email_id, attachments)
+            # Guardar el correo en la base de datos
+            sent_at = datetime.now()  # Fecha y hora actual al enviar el correo
+            received_at= None
+            email_id = self.email_service.guardar_correo(sender_user_id, subject, body_text, body_html, SENDER_EMAIL, False, "sent", "sent", received_at, sent_at)
+            if email_id is None:
+                return jsonify({"error": "No se pudo guardar el correo"}), 500
+            
+            # Guardar destinatarios
+            self.email_service.guardar_destinatarios(email_id, [{"email": email_user, "type": "to"}])
+            
+            # Guardar adjuntos
+            self.email_service.guardar_adjuntos(email_id, attachments)
                 
         print("Todos los correos fueron enviados")
         return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
