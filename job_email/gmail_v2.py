@@ -45,7 +45,7 @@ class Gmail_v2:
         message = MIMEMultipart("alternative")
         message["From"] = config["FROM_ADDRESS"]
         message["To"] = ", ".join(to_email)
-        message["Bcc"] = config["BCC_ADDRESS"]
+        #message["Bcc"] = config["BCC_ADDRESS"]
 
         # message["From"] = sender_email
         # message["To"] = to_email
