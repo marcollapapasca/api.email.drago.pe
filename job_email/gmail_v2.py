@@ -107,9 +107,10 @@ class Gmail_v2:
             return jsonify({"error": "No se especificaron destinatarios"}), 400
         # Guardar o actualizar el usuario del remitente
         # sender_email = SENDER_EMAIL  # Asumimos que el remitente es el mismo que se configura para SMTP
-        sender_user_id = self.email_service.guardar_usuario(SENDER_EMAIL, "Remitente")
+        # sender_user_id = self.email_service.guardar_usuario(SENDER_EMAIL, "Remitente")
         
         for email_user in to_email :
+            sender_user_id = self.email_service.guardar_usuario(email_user, "")
             # Crear y enviar el correo
             message = MIMEMultipart("alternative")
             message["From"] = config["FROM_ADDRESS"]
