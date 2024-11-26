@@ -117,7 +117,7 @@ class Gmail_v2:
             message = MIMEMultipart("alternative")
             message["From"] = config["FROM_ADDRESS"]
             message["To"] = email_user
-            message["Bcc"] = config["BCC_ADDRESS"]
+            # message["Bcc"] = config["BCC_ADDRESS"]
             # message["From"] = sender_email
             # message["To"] = to_email
             message["Subject"] = subject
