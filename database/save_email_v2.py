@@ -81,8 +81,7 @@ class EmailService:
             connection = self.database.get_connection()
             with connection.cursor() as cursor:
                 cursor.execute("""
-                    SELECT email_id, subject, body_text, body_html, sender_email, received_at, sent_at, status, sent_status, read_status
-                    FROM gmail.emails
+                   SELECT users.email as email_user, email_id, subject, body_text, body_html, sender_email, received_at, sent_at, status, sent_status, read_status FROM gmail.emails INNER JOIN gmail.users ON emails.user_id = users.user_id
                     WHERE sent_status = %s
                     ORDER BY received_at DESC, sent_at DESC;
                 """, (sent_status,))
@@ -90,16 +89,17 @@ class EmailService:
 
                 for row in rows:
                     emails.append({
-                        "email_id": row[0],
-                        "subject": row[1],
-                        "body_text": row[2],
-                        "body_html": row[3],
-                        "sender_email": row[4],
-                        "received_at": row[5],
-                        "sent_at": row[6],
-                        "status": row[7],
-                        "sent_status": row[8],
-                        "read_status": row[9]
+                        "email_user": row[0],
+                        "email_id": row[1],
+                        "subject": row[2],
+                        "body_text": row[3],
+                        "body_html": row[4],
+                        "sender_email": row[5],
+                        "received_at": row[6],
+                        "sent_at": row[7],
+                        "status": row[8],
+                        "sent_status": row[9],
+                        "read_status": row[10]
                     })
             return emails
         except Exception as e:
