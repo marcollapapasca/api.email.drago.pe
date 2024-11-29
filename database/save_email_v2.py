@@ -145,7 +145,7 @@ class EmailService:
                 cursor.execute("""
                      SELECT DISTINCT(email), user_id, name FROM gmail.users
                     WHERE send_status = false AND black_list = false
-                    ORDER BY user_id ASC 
+                    ORDER BY user_id ASC LIMIT 40 
                 """)
                 rows = cursor.fetchall()
 
@@ -159,3 +159,77 @@ class EmailService:
         except Exception as e:
             print(f"Error al obtener correos: {e}")
             return []
+        
+    def get_groups(self):
+        connection = None
+        groups = []
+        try:
+            connection = self.database.get_connection()
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                     SELECT G.group_id, group_name, count(*) FROM gmail.groups G
+                    INNER JOIN gmail.contact_group CG ON G.group_id = CG.group_id
+                    GROUP BY G.group_id, group_name
+                    HAVING COUNT(*) > 0
+                    ORDER BY COUNT(*) desc
+                """)
+                rows = cursor.fetchall()
+
+                for row in rows:
+                    groups.append({
+                        "group_id": row[0],
+                        "group_name": row[1],
+                        "count": row[2]
+                    })
+            return groups
+        except Exception as e:
+            print(f"Error al obtener correos: {e}")
+            return []
+        
+    def get_emails_by_groups(self, groups):
+
+        if not groups:
+            print("Error: 'groups' está vacío o no definido.")
+            return []
+
+        connection = None
+        emails = []
+        try:
+            connection = self.database.get_connection()
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT DISTINCT c.email
+                    FROM gmail.groups G
+                    INNER JOIN gmail.contact_group cg ON g.group_id = cg.group_id
+                    INNER JOIN gmail.users c ON cg.user_id = c.user_id
+                    WHERE g.status = true AND cg.status AND g.group_id::TEXT = ANY(string_to_array(%s, ','))
+                    AND c.send_status = false
+                """, (','.join(str(group) for group in groups),))
+                rows = cursor.fetchall()
+
+                for row in rows:
+                    emails.append({
+                        "email": row[0]
+                    })
+            return emails
+        except Exception as e:
+            print(f"Error al obtener correos: {e}")
+            return []
+        
+    def update_send_status_user(self, user_id):
+        connection = None
+        try:
+            connection = self.database.get_connection()
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    UPDATE gmail.users
+                    SET send_status = true
+                    WHERE user_id = %s
+                """, (user_id,))  # user_id debe estar en una tupla
+                connection.commit()
+                return user_id 
+        except Exception as e:
+                print(f"Error al actualizar el estado de envío del usuario: {e}")
+                if connection:
+                    connection.rollback()  # Asegúrate de realizar rollback si ocurre un error
+                return None

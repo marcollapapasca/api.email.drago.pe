@@ -121,3 +121,11 @@ def get_users():
         return jsonify(emails), 200
     else:
         return jsonify({"error": "No emails found for the given id."}), 404
+    
+@main.route("/groups", methods=["GET"])
+def get_groups():
+    groups = gmail_v2.get_groups()
+    if groups:
+        return jsonify(groups), 200
+    else:
+        return jsonify({"error": "No emails found for the given id."}), 404

@@ -99,19 +99,23 @@ class Gmail_v2:
         to_email = data.get("to_address", [])
         subject = data.get("subject")
         body_html = data.get("body")
+        groups = data.get("groups", [])
         body_text = None
         attachments = data.get("attachments", [])  # Lista de adjuntos como diccionarios
+        
+        recipients_email = self.email_service.get_emails_by_groups(groups if groups else None)
+        # si el destino dice que ers tú agradecido por haberte puesto en mi camino
+        emails_users = [user['email'] for user in recipients_email]
+        combined_emails = list(set(to_email + emails_users))
+        print(combined_emails)
 
-        print(to_email)
-
-        if not to_email:
+        if not combined_emails:
             return jsonify({"error": "No se especificaron destinatarios"}), 400
         # Guardar o actualizar el usuario del remitente
         # sender_email = SENDER_EMAIL  # Asumimos que el remitente es el mismo que se configura para SMTP
         # sender_user_id = self.email_service.guardar_usuario(SENDER_EMAIL, "Remitente")
  
-        for email_user in to_email:
-            print(email_user)
+        for email_user in combined_emails:
             sender_user_id = self.email_service.guardar_usuario(email_user, "")
             # Crear y enviar el correo
             message = MIMEMultipart("alternative")
@@ -148,9 +152,12 @@ class Gmail_v2:
             sent_at = datetime.now()  # Fecha y hora actual al enviar el correo
             received_at= None
             email_id = self.email_service.guardar_correo(sender_user_id, subject, body_text, body_html, SENDER_EMAIL, False, "sent", "sent", received_at, sent_at)
+            
             if email_id is None:
                 return jsonify({"error": "No se pudo guardar el correo"}), 500
             
+            #actualizar el usuario
+            self.email_service.update_send_status_user(sender_user_id)
             # Guardar destinatarios
             self.email_service.guardar_destinatarios(email_id, [{"email": email_user, "type": "to"}])
             
@@ -261,3 +268,6 @@ class Gmail_v2:
     
     def get_users(self):
         return self.email_service.get_users()
+    
+    def get_groups(self):
+        return self.email_service.get_groups()
