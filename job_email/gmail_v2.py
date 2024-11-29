@@ -165,7 +165,7 @@ class Gmail_v2:
             # Guardar adjuntos
             self.email_service.guardar_adjuntos(email_id, attachments)
 
-            time.sleep(2)
+            time.sleep(3)
 
         print("Todos los correos fueron enviados")
         return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
