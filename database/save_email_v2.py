@@ -168,8 +168,9 @@ class EmailService:
             connection = self.database.get_connection()
             with connection.cursor() as cursor:
                 cursor.execute("""
-                     SELECT G.group_id, group_name, count(*) FROM gmail.groups G
+                    SELECT G.group_id, group_name, count(*), COUNT(CASE WHEN u.send_status = false THEN 1 END) AS false_send_status_count FROM gmail.groups G
                     INNER JOIN gmail.contact_group CG ON G.group_id = CG.group_id
+                    INNER JOIN gmail.users u ON cg.user_id = u.user_id
                     GROUP BY G.group_id, group_name
                     HAVING COUNT(*) > 0
                     ORDER BY COUNT(*) desc
