@@ -181,7 +181,8 @@ class EmailService:
                     groups.append({
                         "group_id": row[0],
                         "group_name": row[1],
-                        "count": row[2]
+                        "count": row[2],
+                        "false_send_status_count": row[3]
                     })
             return groups
         except Exception as e:
