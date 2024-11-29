@@ -7,6 +7,7 @@ import base64
 import os
 import imaplib
 import email
+import time
 from email.header import decode_header
 from datetime import datetime
 
@@ -163,7 +164,9 @@ class Gmail_v2:
             
             # Guardar adjuntos
             self.email_service.guardar_adjuntos(email_id, attachments)
-                
+
+            time.sleep(2)
+
         print("Todos los correos fueron enviados")
         return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
         
