@@ -82,13 +82,12 @@ class EmailService:
             with connection.cursor() as cursor:
                 cursor.execute("""
                   SELECT users.email as email_user, email_id, subject, body_text, body_html, sender_email, received_at, sent_at, status, sent_status, read_status FROM gmail.emails INNER JOIN gmail.users ON emails.user_id = users.user_id
-                    WHERE (
-                        LOWER(users.email) NOT LIKE 'postmaster@%' 
-                        OR LOWER(users.email) NOT LIKE 'mailer-daemon@%' 
-                        OR LOWER(users.email) NOT LIKE 'no-reply@%' 
-                        OR LOWER(users.email) NOT LIKE 'sc-noreply@%'
-                            ) 
-                        and sent_status = %s
+                    WHERE 
+                    LOWER(users.email) NOT LIKE 'postmaster@%' 
+                        AND LOWER(users.email) NOT LIKE 'mailer-daemon@%' 
+                        AND LOWER(users.email) NOT LIKE 'no-reply@%' 
+                        AND LOWER(users.email) NOT LIKE 'sc-noreply@%'
+                        AND sent_status = %s
                     ORDER BY received_at DESC, sent_at DESC
                     LIMIT 100;
                 """, (sent_status,))
