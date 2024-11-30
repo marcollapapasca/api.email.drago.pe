@@ -10,6 +10,7 @@ import email
 import time
 from email.header import decode_header
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 from database.save_email_v2 import EmailService 
@@ -90,7 +91,7 @@ class Gmail_v2:
             print(f"Error al enviar el correo: {e}")
             return jsonify({"error": "Error al enviar el correo"}), 500
         
-    def send_email_massive(self, config , data):
+    def send_email_massive_v1(self, config , data):
         # Configuración de credenciales de correo
         SMTP_SERVER = config["GMAIL_HOST"]
         SMTP_PORT = config["GMAIL_PORT"]
@@ -170,6 +171,81 @@ class Gmail_v2:
         print("Todos los correos fueron enviados")
         return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
         
+    def send_email_massive(self, config, data):
+        """Función principal para enviar correos masivos."""
+        # Extraer datos de entrada
+        to_email = data.get("to_address", [])
+        subject = data.get("subject")
+        body_html = data.get("body")
+        groups = data.get("groups", [])
+        attachments = data.get("attachments", [])
+
+        # Obtener correos combinados
+        recipients_email = self.email_service.get_emails_by_groups(groups if groups else None)
+        emails_users = [user['email'] for user in recipients_email]
+        combined_emails = list(set(to_email + emails_users))
+
+        if not combined_emails:
+            return {"error": "No se especificaron destinatarios"}
+
+        print(f"Enviando correos a {len(combined_emails)} destinatarios...")
+
+        # Función interna para enviar un correo individual
+        def send_email(recipient):
+            try:
+                # Guardar usuario
+                sender_user_id = self.email_service.guardar_usuario(recipient, "")
+
+                # Crear el mensaje
+                message = MIMEMultipart("alternative")
+                message["From"] = config["FROM_ADDRESS"]
+                message["To"] = recipient
+                message["Subject"] = subject
+                message.attach(MIMEText(body_html, "html"))
+
+                # Adjuntar archivos
+                for attachment in attachments:
+                    filename = attachment['filename']
+                    file_data = base64.b64decode(attachment['file_data'])
+                    part = MIMEText(file_data, 'base64')
+                    part.add_header('Content-Disposition', f'attachment; filename="{filename}"')
+                    message.attach(part)
+
+                # Enviar el correo
+                server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"], timeout=60)
+                server.starttls()
+                server.login(config["GMAIL_USER"], config["GMAIL_PASS"])
+                server.send_message(message)
+                server.quit()
+
+                # Guardar correo
+                email_id = self.email_service.guardar_correo(
+                    sender_user_id, subject, None, body_html, config["FROM_ADDRESS"], False, "sent", "sent",
+                    None, datetime.now()
+                )
+
+                # Actualizar estado del usuario
+                self.email_service.update_send_status_user(sender_user_id)
+
+                # Guardar destinatarios y adjuntos
+                self.email_service.guardar_destinatarios(email_id, [{"email": recipient, "type": "to"}])
+                self.email_service.guardar_adjuntos(email_id, attachments)
+
+                print(f"Correo enviado correctamente a: {recipient}")
+                return {"recipient": recipient, "status": "success"}
+            except Exception as e:
+                print(f"Error al enviar correo a {recipient}: {e}")
+                return {"recipient": recipient, "status": "failed", "error": str(e)}
+
+        # Enviar correos en paralelo
+        results = []
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = {executor.submit(send_email, email): email for email in combined_emails}
+            for future in as_completed(futures):
+                results.append(future.result())
+
+        print("Todos los correos fueron procesados.")
+        return results
 
     # Método para leer correos no leídos de Gmail
     def read_emails(self, config):
