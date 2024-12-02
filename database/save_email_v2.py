@@ -206,7 +206,7 @@ class EmailService:
                     INNER JOIN gmail.contact_group cg ON g.group_id = cg.group_id
                     INNER JOIN gmail.users c ON cg.user_id = c.user_id
                     WHERE g.status = true AND cg.status AND g.group_id::TEXT = ANY(string_to_array(%s, ','))
-                    AND c.send_status = false
+                    AND c.send_status = false LIMIT 1900
                 """, (','.join(str(group) for group in groups),))
                 rows = cursor.fetchall()
 
