@@ -106,11 +106,8 @@ class Gmail_v2:
         attachments = data.get("attachments", [])  # Lista de adjuntos como diccionarios
         
         recipients_email = self.email_service.get_emails_by_groups(groups if groups else None)
-        # si el destino dice que ers tú agradecido por haberte puesto en mi camino
         emails_users = [user['email'] for user in recipients_email]
         combined_emails = list(set(to_email + emails_users))
-        print(combined_emails)
-
         if not combined_emails:
             return jsonify({"error": "No se especificaron destinatarios"}), 400
         # Guardar o actualizar el usuario del remitente
@@ -250,11 +247,17 @@ class Gmail_v2:
     # Método para leer correos no leídos de Gmail
     def read_emails(self, config):
             username = config["GMAIL_USER"]
-            password = config["GMAIL_PASS"]
+            access_token = config["ACCESS_TOKEN"]
 
+            auth_string =  f"user={username}\1auth=Bearer {access_token}\1\1"
+            # auth_string = base64.b64encode(auth_string.encode()).decode()
+
+            print(auth_string)
             # Conectar con el servidor de Gmail usando IMAP
-            mail = imaplib.IMAP4_SSL("imap.gmail.com")
-            mail.login(username, password)
+            mail = imaplib.IMAP4_SSL(host=config["GMAIL_HOST"])
+            mail.authenticate("XOAUTH2", lambda x: auth_string)
+
+            # mail.login(username, password)
 
             # Seleccionar la bandeja de entrada
             mail.select("inbox")
