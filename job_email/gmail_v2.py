@@ -52,7 +52,7 @@ class Gmail_v2:
         # message["From"] = sender_email
         # message["To"] = to_email
         message["Subject"] = subject
-        message.attach(MIMEText(body_html, "html"))
+        message.attach(MIMEText(body_html, "html", "utf-8"))
 
         for attachment in attachments:
             filename = attachment['filename']
@@ -124,7 +124,7 @@ class Gmail_v2:
             # message["From"] = sender_email
             # message["To"] = to_email
             message["Subject"] = subject
-            message.attach(MIMEText(body_html, "html"))
+            message.attach(MIMEText(body_html, "html", "utf-8"))
 
             for attachment in attachments:
                 filename = attachment['filename']
@@ -198,7 +198,7 @@ class Gmail_v2:
                 message["From"] = config["FROM_ADDRESS"]
                 message["To"] = recipient
                 message["Subject"] = subject
-                message.attach(MIMEText(body_html, "html"))
+                message.attach(MIMEText(body_html, "html", "utf-8"))
 
                 # Adjuntar archivos
                 for attachment in attachments:
