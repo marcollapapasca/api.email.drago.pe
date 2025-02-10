@@ -165,7 +165,7 @@ class Gmail_v2:
 
             time.sleep(3)
 
-        print("Todos los correos fueron enviados")
+        print("Todos los correos fueron enviados") 
         return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
         
     def send_email_massive(self, config, data):
@@ -247,7 +247,7 @@ class Gmail_v2:
     # Método para leer correos no leídos de Gmail
     def read_emails(self, config):
             username = config["GMAIL_USER"]
-            access_token = config["ACCESS_TOKEN"]
+            access_token = os.getenv("ACCESS_TOKEN")
 
             auth_string =  f"user={username}\1auth=Bearer {access_token}\1\1"
             # auth_string = base64.b64encode(auth_string.encode()).decode()
