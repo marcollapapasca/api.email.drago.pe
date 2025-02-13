@@ -243,7 +243,7 @@ class Gmail:
         message_send = None
         try:
             access_token = Gmail.get_access_token()
-            auth_string = f"user={config["OUTLOOK_USER"]}\x01auth=Bearer {access_token}\x01\x01"
+            auth_string = f"user={config['OUTLOOK_USER']}\x01auth=Bearer {access_token}\x01\x01"
             auth_b64 = base64.b64encode(auth_string.encode()).decode()
 
             server = smtplib.SMTP(host="smtp-mail.outlook.com", port=587)
