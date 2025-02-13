@@ -11,6 +11,7 @@ import time
 from email.header import decode_header
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import requests
 
 
 from database.save_email_v2 import EmailService 
@@ -26,10 +27,10 @@ class Gmail_v2:
     def send_email(self, config , data):
 
         # Configuración de credenciales de correo
-        SMTP_SERVER = config["GMAIL_HOST"]
-        SMTP_PORT = config["GMAIL_PORT"]
-        SENDER_EMAIL = config["GMAIL_USER"]
-        SENDER_PASSWORD = config["GMAIL_PASS"]
+        SMTP_SERVER = config["OUTLOOK_HOST"]
+        SMTP_PORT = config["OUTLOOK_PORT"]
+        SENDER_EMAIL = config["OUTLOOK_USER"]
+        SENDER_PASSWORD = config["OUTLOOK_PASS"]
  
         to_email = data.get("to_address", [])
         subject = data.get("subject")
@@ -66,9 +67,9 @@ class Gmail_v2:
         
         try:
             print(message)
-            server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"], timeout=60)
+            server = smtplib.SMTP(host=config["OUTLOOK_HOST"], port=config["OUTLOOK_PORT"], timeout=60)
             server.starttls()
-            server.login(config["GMAIL_USER"], config["GMAIL_PASS"])
+            server.login(config["OUTLOOK_USER"], config["OUTLOOK_PASS"])
             server.send_message(message)
  
             # Guardar el correo en la base de datos
@@ -93,10 +94,10 @@ class Gmail_v2:
         
     def send_email_massive_v1(self, config , data):
         # Configuración de credenciales de correo
-        SMTP_SERVER = config["GMAIL_HOST"]
-        SMTP_PORT = config["GMAIL_PORT"]
-        SENDER_EMAIL = config["GMAIL_USER"]
-        SENDER_PASSWORD = config["GMAIL_PASS"]
+        SMTP_SERVER = config["OUTLOOK_HOST"]
+        SMTP_PORT = config["OUTLOOK_PORT"]
+        SENDER_EMAIL = config["OUTLOOK_USER"]
+        SENDER_PASSWORD = config["OUTLOOK_PASS"]
  
         to_email = data.get("to_address", [])
         subject = data.get("subject")
@@ -137,9 +138,9 @@ class Gmail_v2:
                 message.attach(part)
             
             try:   
-                server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"], timeout=60)
+                server = smtplib.SMTP(host=config["OUTLOOK_HOST"], port=config["OUTLOOK_PORT"], timeout=60)
                 server.starttls()
-                server.login(config["GMAIL_USER"], config["GMAIL_PASS"])
+                server.login(config["OUTLOOK_USER"], config["OUTLOOK_PASS"])
                 server.send_message(message)
                 print("Correo enviado y guardado correctamente")
                 # return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
@@ -209,9 +210,9 @@ class Gmail_v2:
                     message.attach(part)
 
                 # Enviar el correo
-                server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"], timeout=60)
+                server = smtplib.SMTP(host=config["OUTLOOK_HOST"], port=config["OUTLOOK_PORT"], timeout=60)
                 server.starttls()
-                server.login(config["GMAIL_USER"], config["GMAIL_PASS"])
+                server.login(config["OUTLOOK_USER"], config["OUTLOOK_PASS"])
                 server.send_message(message)
                 server.quit()
 
@@ -244,33 +245,144 @@ class Gmail_v2:
         print("Todos los correos fueron procesados.")
         return results
 
+    def get_access_token():
+        tenant_id = "b308f809-2724-407a-8152-5c50ccb03b1f"
+        client_id = "3d5154df-e779-499f-bbb5-2143d9f5107a"
+        client_secret = "D3A8Q~SCsngK~Vq3LBiX2Xaf-nH7rjlhHD-sZdhx"
+
+        url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
+        data = {
+            "client_id": client_id,
+            "client_secret": client_secret,
+            # "username": "contacto@tumerka.pe",
+            # "password": "Peru123...",
+            "grant_type": "client_credentials",
+            "scope": "https://graph.microsoft.com/.default",
+        }
+
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+
+        response = requests.post(url, data=data, headers=headers)
+
+        if response.status_code == 200:
+            print(response.json())
+            access_token = response.json().get("access_token")
+            print("✅ Token obtenido con éxito")
+            return access_token
+        else:
+            print(
+                f"❌ Error obteniendo token: {response.status_code} - {response.text}"
+            )
+            return None
+        
+    def authorize_outlook():
+        tenant_id = "b308f809-2724-407a-8152-5c50ccb03b1f"
+        client_id = "3d5154df-e779-499f-bbb5-2143d9f5107a"
+        client_secret = "D3A8Q~SCsngK~Vq3LBiX2Xaf-nH7rjlhHD-sZdhx"
+
+        url = f"https://login.microsoftonline.com/{tenant_id}/v2.0/adminconsent"
+        data = {
+            "client_id": client_id,
+            "redirect_uri": "/",
+            "scope": "https://ps.outlook.com/.default",
+        }
+
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+
+        response = requests.post(url, data=data, headers=headers)
+
+        if response.status_code == 200:
+            print(response.json())
+            # access_token = response.json().get("access_token")
+            print("✅ Autorización con éxito")
+            # return access_token
+        else:
+            print(
+                f"❌ Error obteniendo token: {response.status_code} - {response.text}"
+            )
+            # return None
+
     # Método para leer correos no leídos de Gmail
     def read_emails(self, config):
-            username = config["GMAIL_USER"]
-            access_token = os.getenv("ACCESS_TOKEN")
+            # Gmail_v2.authorize_outlook()
+            # return 
+            access_token = Gmail_v2.get_access_token()
+            
 
-            auth_string =  f"user={username}\1auth=Bearer {access_token}\1\1"
-            # auth_string = base64.b64encode(auth_string.encode()).decode()
+            # headers = {"Authorization": f"Bearer {access_token}"}
+            # url = "https://graph.microsoft.com/v1.0/me/messages"
 
-            print(auth_string)
+            # response = requests.get(url, headers=headers)
+            # print(response.json())
+            # return
+
+
+            
+
+            auth_string = f"user={config['OUTLOOK_USER']}\x01auth=Bearer {access_token}\x01\x01"
+            auth_b64 = base64.b64encode(auth_string.encode()).decode()
+            server = imaplib.IMAP4_SSL(host="outlook.office365.com")
+            server.debug = 4
+            response = server.authenticate("XOAUTH2", lambda x: auth_b64)
+            print("Autenticación exitosa:", response)
+            # status_code, response = server.ehlo()
+            # print(f"[*] Echoing the server: {status_code} {response}")
+            # status_code, response = server.starttls()
+            # print(f"[*] Starting TLS the server: {status_code} {response}")
+            # status_code, response = server.starttls()
+            # print(f"[*] Echoing the server: {status_code} {response}")
+
+            # print(auth_string)
             # Conectar con el servidor de Gmail usando IMAP
-            mail = imaplib.IMAP4_SSL(host=config["GMAIL_HOST"])
-            mail.authenticate("XOAUTH2", lambda x: auth_string)
+            # mail = imaplib.IMAP4_SSL(host=config["OUTLOOK_HOST"])
+            # mail.authenticate("XOAUTH2", lambda x: auth_string)
+            # mail = imaplib.IMAP4_SSL(config["OUTLOOK_HOST"])
+
+            # status_code, response = mail.ehlo()
+            # print(f"[*] Echoing the server: {status_code} {response}")
+
+            # print(f"{mail}")
+            # return
+            # status_code, response = mail.starttls()
+            # print(f"[*] Startin TLS the server: {status_code} {response}")
+
+            # return
+            # status_code, response = mail.ehlo()
+            # print(f"[*] Echoing the server: {status_code} {response}")
+
+            # Enviar la autenticación XOAUTH2 manualmente
+            # result, _ = mail.authenticate("XOAUTH2", lambda x: auth_b64)
+
+            # if result != "OK":
+            #     print("Autenticación fallida")
+            # else:
+            #     print("✅ Autenticación exitosa con OAuth 2.0")
+
+            # Seleccionar la bandeja de entrada
+            server.select("inbox")
+            # Aquí puedes continuar con la lógica para leer correos...
+
+            # No olvides cerrar la conexión al final
+            # status_code, response = mail.login(username, password)
+            # print(f"[*] Login  the server: {status_code} {response}")
+            # print("✅ Autenticación exitosa con OAuth 2.0")
+             
+            # mail.docmd("AUTH", "XOAUTH2 " + auth_string)
 
             # mail.login(username, password)
 
             # Seleccionar la bandeja de entrada
-            mail.select("inbox")
+            server.select("inbox")
 
             # Buscar correos no leídos
-            status, messages = mail.search(None, 'UNSEEN')
+            status, messages = server.search(None, 'UNSEEN')
             mail_ids = messages[0].split()
 
             new_emails = []
 
             # Procesar cada correo no leído
             for mail_id in mail_ids:
-                status, msg_data = mail.fetch(mail_id, '(RFC822)')
+                status, msg_data = server.fetch(mail_id, '(RFC822)')
                 for response_part in msg_data:
                     if isinstance(response_part, tuple):
                         # Decodificar el mensaje
@@ -337,7 +449,7 @@ class Gmail_v2:
                         })
 
             # Cerrar la conexión con el servidor de Gmail
-            mail.logout()
+            server.logout()
 
             return new_emails
             

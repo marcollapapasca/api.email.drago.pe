@@ -12,7 +12,7 @@ class EmailService:
             conn = self.database.get_connection()
             sku = data.get("sku")
             to_address = data.get("to_address")
-            gmail_user = config.get("GMAIL_USER")
+            gmail_user = config.get("OUTLOOK_USER")
 
             if not sku or not to_address or not gmail_user:
                 raise ValueError("Faltan datos obligatorios en la entrada")

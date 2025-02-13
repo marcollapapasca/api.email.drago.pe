@@ -1,7 +1,7 @@
 {
-  "GMAIL_HOST": "outlook.office365.com",
-  "GMAIL_PORT": 993,
-  "GMAIL_USER": "contacto@tumerka.pe",
-  "GMAIL_PASS": "Peru123...",
+  "OUTLOOK_HOST": "outlook.office365.com",
+  "OUTLOOK_PORT": 993,
+  "OUTLOOK_USER": "contacto@tumerka.pe",
+  "OUTLOOK_PASS": "Peru123...",
   "FROM_ADDRESS": "TuMerka <contacto@tumerka.pe>"
 }

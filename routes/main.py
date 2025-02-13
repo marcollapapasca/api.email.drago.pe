@@ -17,11 +17,12 @@ gmail_v2 = Gmail_v2()
 @main.route("/send_email", methods=["POST"])
 def handle_send_email():
     data = request.json
+    print(data)
     # config_path = 'config.json'
     to_address = data.get("to_address")
     sku = data.get("sku")
     template_path = sku + ".html"
-    config_smtp = sku.split('_')[0] + "_smtp.json"
+    config_smtp = sku.split('_')[0] + "_exchange_smtp.json"
     event_type = '_'.join(sku.split('_')[1:])
     print(event_type)
 
@@ -65,6 +66,8 @@ def event_stream():
         
         # Leer los correos y obtener solo los no leídos
         new_emails = gmail_v2.read_emails(config)
+        return 
+        
         
         # Filtrar los correos no leídos y enviar notificación
         for email_data in new_emails:
