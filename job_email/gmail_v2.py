@@ -158,8 +158,6 @@ class Gmail_v2:
   </tr>
 </table>
                 """
-        
-        print(body_html)
 
         for email_user in combined_emails:
             sender_user_id = self.email_service.guardar_usuario(email_user, "")
@@ -189,22 +187,13 @@ class Gmail_v2:
                 auth_b64 = base64.b64encode(auth_string.encode()).decode()
 
                 server = smtplib.SMTP(host="smtp-mail.outlook.com", port=587)
-                status_code, response = server.ehlo()
-                print(f"[*] Echoing the server: {status_code} {response}")
-                status_code, response = server.starttls()
-                print(f"[*] Starting TLS the server: {status_code} {response}")
-                status_code, response = server.ehlo()
-                print(f"[*] Echoing the server: {status_code} {response}")
-                status_code, response = server.docmd("AUTH", "XOAUTH2 " + auth_b64)
-                print(f"[*] Login the server: {status_code} {response}")   
-
-                
-                # server = smtplib.SMTP(host=config["OUTLOOK_HOST"], port=config["OUTLOOK_PORT"], timeout=60)
-                # server.starttls()
-                # server.login(config["OUTLOOK_USER"], config["OUTLOOK_PASS"])
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.docmd("AUTH", "XOAUTH2 " + auth_b64)
                 time.sleep(2)
                 server.send_message(message)
-                print("✅ Correo enviado y guardado correctamente")
+                print(f"✅ Correo enviado y guardado correctamente {email_user}")
                 # return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
             except smtplib.SMTPServerDisconnected as e:
                 print(f"❌ Error al enviar el correo: {e}")
@@ -226,9 +215,7 @@ class Gmail_v2:
             # Guardar adjuntos
             self.email_service.guardar_adjuntos(email_id, attachments)
 
-            time.sleep(3)
-
-        print("Todos los correos fueron enviados") 
+        print("🟩 Todos los correos fueron enviados") 
         return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
         
     def send_email_massive(self, config, data):
@@ -328,7 +315,6 @@ class Gmail_v2:
 
         if response.status_code == 200:
             access_token = response.json().get("access_token")
-            print("✅ Token obtenido con éxito")
             return access_token
         else:
             print(
