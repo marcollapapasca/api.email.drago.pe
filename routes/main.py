@@ -59,14 +59,13 @@ def send_email():
 # Detecta nuevos correos cada cierto tiempo y envía un mensaje SSE
 def event_stream():
     last_checked_email_id = None
-
+    return 
     while True:
         # Cargar la configuración para conectarse a Gmail
         config = gmail_v2.load_config("tumerka_exchange_smtp.json")  # Ruta al archivo de configuración SMTP
         
         # Leer los correos y obtener solo los no leídos
         new_emails = gmail_v2.read_emails(config)
-        return 
         
         
         # Filtrar los correos no leídos y enviar notificación

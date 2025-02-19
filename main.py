@@ -1,5 +1,5 @@
-import os
 from flask import Flask
+import os
 from routes.main import main
 import logging
 from logging.handlers import RotatingFileHandler

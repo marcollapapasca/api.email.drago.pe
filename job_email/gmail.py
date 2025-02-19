@@ -7,7 +7,7 @@ from email import encoders
 import os
 from datetime import datetime
 from database.save_email_v2 import EmailService
-
+import dkim
 import requests
 import base64
 
@@ -67,6 +67,24 @@ class Gmail:
         # msg["Bcc"] = config["BCC_ADDRESS"]
         to_email = data.get("to_address")
         SENDER_EMAIL = config["OUTLOOK_USER"]
+       
+
+        # with open("dkim_private.pem", "rb") as f:
+        #     private_key = f.read()
+
+        # print(type(private_key))  # Debe mostrar: <class 'bytes'>
+        # # Crear la firma DKIM
+        # headers = [b"from", b"to", b"subject"]
+        # signature = dkim.sign(
+        #     msg.as_bytes(),
+        #     selector=b"dkim1",
+        #     domain=b"tumerka.pe",
+        #     privkey=private_key,
+        #     include_headers=headers,
+        #     length=True
+        # )
+        # print(signature.decode())
+        # msg["DKIM-Signature"] = signature.decode()
 
         template_html = self.load_html_template(template_path)
         body_html = None
@@ -243,35 +261,53 @@ class Gmail:
         message_send = None
         try:
             access_token = Gmail.get_access_token()
-            auth_string = f"user={config['OUTLOOK_USER']}\x01auth=Bearer {access_token}\x01\x01"
+            auth_string = (
+                f"user={config['OUTLOOK_USER']}\x01auth=Bearer {access_token}\x01\x01"
+            )
             auth_b64 = base64.b64encode(auth_string.encode()).decode()
 
             server = smtplib.SMTP(host="smtp-mail.outlook.com", port=587)
             status_code, response = server.ehlo()
             print(f"[*] Echoing the server: {status_code} {response}")
             status_code, response = server.starttls()
+            server.debuglevel = 4
             print(f"[*] Starting TLS the server: {status_code} {response}")
             status_code, response = server.ehlo()
             print(f"[*] Echoing the server: {status_code} {response}")
             status_code, response = server.docmd("AUTH", "XOAUTH2 " + auth_b64)
             print(f"[*] Login the server: {status_code} {response}")
 
-        #     server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"])
-        #     server.starttls()
-        #     server.login(config ["GMAIL_USER"], config["GMAIL_PASS"])
+            #     server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"])
+            #     server.starttls()
+            #     server.login(config ["GMAIL_USER"], config["GMAIL_PASS"])
             server.send_message(msg)
             # save_email(data, config, body_html, "Success", message_send)
             sent_at = datetime.now()  # Fecha y hora actual al enviar el correo
-            received_at= None
+            received_at = None
             subject = msg["Subject"]
-            sender_user_id = self.email_service.guardar_usuario(SENDER_EMAIL, "Remitente")
-            email_id = self.email_service.guardar_correo(sender_user_id, subject, body_text, body_html, SENDER_EMAIL, False, "sent", "sent", received_at, sent_at)
-            self.email_service.guardar_destinatarios(email_id, [{"email": to_email, "type": "to"}])
-            
-            message_send="Correo enviado exitosamente"
+            sender_user_id = self.email_service.guardar_usuario(
+                SENDER_EMAIL, "Remitente"
+            )
+            email_id = self.email_service.guardar_correo(
+                sender_user_id,
+                subject,
+                body_text,
+                body_html,
+                SENDER_EMAIL,
+                False,
+                "sent",
+                "sent",
+                received_at,
+                sent_at,
+            )
+            self.email_service.guardar_destinatarios(
+                email_id, [{"email": to_email, "type": "to"}]
+            )
+
+            message_send = "Correo enviado exitosamente"
             print(message_send)
         except Exception as e:
-            message_send="Error al enviar el correo: {e}"
+            message_send = "Error al enviar el correo: {e}"
             print(message_send)
         #     save_email(data, config, body_html,  "Failed",  message_send)
         # finally:

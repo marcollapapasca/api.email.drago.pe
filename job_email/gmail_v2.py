@@ -114,7 +114,53 @@ class Gmail_v2:
         # Guardar o actualizar el usuario del remitente
         # sender_email = SENDER_EMAIL  # Asumimos que el remitente es el mismo que se configura para SMTP
         # sender_user_id = self.email_service.guardar_usuario(SENDER_EMAIL, "Remitente")
- 
+        body_html = body_html.replace("\n", "<br>")
+        body_html += """
+        <br> 
+                <span>Nos puede contactar a</span>
+<table>
+  <tr>
+    <td>1️⃣ Marco Llapapasca</td>
+    <td><a style="text-decoration: none" href="https://wa.me/51923367852">📱(+51) 973 777 853</a></td>
+  </tr>
+  <tr>
+    <td>2️⃣ Katherine Díaz</td>
+    <td><a style="text-decoration: none" href="https://wa.me/51923367852" target="_blank">📱(+51) 923 367 852</a></td>
+  </tr>
+  <tr>
+    <td>3️⃣ Denisse Ruíz</td>
+    <td><a style="text-decoration: none" href="https://wa.me/51960370846" target="_blank">📱(+51) 960 370 846</a></td>
+  </tr>
+  <tr>
+    <td>4️⃣ Omar Prado</td>
+    <td><a style="text-decoration: none" href="https://wa.me/51948845033" target="_blank">📱(+51) 948 845 033</a></td>
+  </tr>
+</table>
+<table
+  style="font-family: Arial, sans-serif; font-size: 12px; color: #000; width: 100%; max-width: 500px; padding: 0; margin: 0">
+
+  <tr>
+    <td>
+      <a href="https://drago.pe" style="text-decoration: none; color: black; font-size: 20px;">
+        <strong>DRAGO</strong>
+      </a>
+    </td>
+    <td style="padding-left: 10px;  border-left: 2px solid #008000;">
+      <table>
+        <tr>
+          <td><strong>CORPORACIÓN GRUPO DRAGO S.A.C</strong></td>
+        </tr>
+        <tr>
+          <td>RUC: 20608386387 </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+                """
+        
+        print(body_html)
+
         for email_user in combined_emails:
             sender_user_id = self.email_service.guardar_usuario(email_user, "")
             # Crear y enviar el correo
@@ -137,15 +183,31 @@ class Gmail_v2:
                 part.add_header('Content-Disposition', f'attachment; filename="{filename}"')
                 message.attach(part)
             
-            try:   
-                server = smtplib.SMTP(host=config["OUTLOOK_HOST"], port=config["OUTLOOK_PORT"], timeout=60)
-                server.starttls()
-                server.login(config["OUTLOOK_USER"], config["OUTLOOK_PASS"])
+            try:
+                access_token = Gmail_v2.get_access_token()
+                auth_string = f"user={config['OUTLOOK_USER']}\x01auth=Bearer {access_token}\x01\x01"
+                auth_b64 = base64.b64encode(auth_string.encode()).decode()
+
+                server = smtplib.SMTP(host="smtp-mail.outlook.com", port=587)
+                status_code, response = server.ehlo()
+                print(f"[*] Echoing the server: {status_code} {response}")
+                status_code, response = server.starttls()
+                print(f"[*] Starting TLS the server: {status_code} {response}")
+                status_code, response = server.ehlo()
+                print(f"[*] Echoing the server: {status_code} {response}")
+                status_code, response = server.docmd("AUTH", "XOAUTH2 " + auth_b64)
+                print(f"[*] Login the server: {status_code} {response}")   
+
+                
+                # server = smtplib.SMTP(host=config["OUTLOOK_HOST"], port=config["OUTLOOK_PORT"], timeout=60)
+                # server.starttls()
+                # server.login(config["OUTLOOK_USER"], config["OUTLOOK_PASS"])
+                time.sleep(2)
                 server.send_message(message)
-                print("Correo enviado y guardado correctamente")
+                print("✅ Correo enviado y guardado correctamente")
                 # return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
             except smtplib.SMTPServerDisconnected as e:
-                print(f"Error al enviar el correo: {e}")
+                print(f"❌ Error al enviar el correo: {e}")
                 #return jsonify({"error": "Error al enviar el correo"}), 500
 
             # Guardar el correo en la base de datos
@@ -254,10 +316,10 @@ class Gmail_v2:
         data = {
             "client_id": client_id,
             "client_secret": client_secret,
-            # "username": "contacto@tumerka.pe",
-            # "password": "Peru123...",
-            "grant_type": "client_credentials",
-            "scope": "https://graph.microsoft.com/.default",
+            "username": "contacto@drago.pe",
+            "password": "Peru123...",
+            "grant_type": "password",
+            "scope": "https://outlook.office365.com/.default",
         }
 
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
@@ -265,7 +327,6 @@ class Gmail_v2:
         response = requests.post(url, data=data, headers=headers)
 
         if response.status_code == 200:
-            print(response.json())
             access_token = response.json().get("access_token")
             print("✅ Token obtenido con éxito")
             return access_token
@@ -275,33 +336,6 @@ class Gmail_v2:
             )
             return None
         
-    def authorize_outlook():
-        tenant_id = "b308f809-2724-407a-8152-5c50ccb03b1f"
-        client_id = "3d5154df-e779-499f-bbb5-2143d9f5107a"
-        client_secret = "D3A8Q~SCsngK~Vq3LBiX2Xaf-nH7rjlhHD-sZdhx"
-
-        url = f"https://login.microsoftonline.com/{tenant_id}/v2.0/adminconsent"
-        data = {
-            "client_id": client_id,
-            "redirect_uri": "/",
-            "scope": "https://ps.outlook.com/.default",
-        }
-
-        headers = {"Content-Type": "application/x-www-form-urlencoded"}
-
-        response = requests.post(url, data=data, headers=headers)
-
-        if response.status_code == 200:
-            print(response.json())
-            # access_token = response.json().get("access_token")
-            print("✅ Autorización con éxito")
-            # return access_token
-        else:
-            print(
-                f"❌ Error obteniendo token: {response.status_code} - {response.text}"
-            )
-            # return None
-
     # Método para leer correos no leídos de Gmail
     def read_emails(self, config):
             # Gmail_v2.authorize_outlook()

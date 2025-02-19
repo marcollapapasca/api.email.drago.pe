@@ -1,7 +1,7 @@
 {
   "OUTLOOK_HOST": "outlook.office365.com",
   "OUTLOOK_PORT": 993,
-  "OUTLOOK_USER": "contacto@tumerka.pe",
+  "OUTLOOK_USER": "contacto@drago.pe",
   "OUTLOOK_PASS": "Peru123...",
-  "FROM_ADDRESS": "TuMerka <contacto@tumerka.pe>"
+  "FROM_ADDRESS": "Drago <contacto@drago.pe>"
 }
