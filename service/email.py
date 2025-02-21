@@ -1,92 +1,34 @@
-import json
-import smtplib
+from service.database.message import MessageService
+from service.database.user import UserService
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
-import os
+from email.header import decode_header
+from flask import jsonify
 from datetime import datetime
-from database.save_email_v2 import EmailService
-import dkim
-import requests
+from utils.utils import load_html_template
+from service.msal import get_access_token
+from signature import signatureGlobal
+import smtplib
+import imaplib
 import base64
+import time
+import email
 
-# save_email = EmailService().save_email
 
-
-class Gmail:
-
+class EmailService:
     def __init__(self):
-        self.email_service = EmailService()
-
-    def load_config(self, config_path):
-        with open(os.path.join(os.path.dirname(__file__), config_path), "r") as file:
-            return json.load(file)
-
-    def load_html_template(self, template_path):
-        with open(
-            os.path.join(os.path.dirname(__file__), template_path),
-            "r",
-            encoding="utf-8",
-        ) as file:
-            return file.read()
-
-    def get_access_token():
-        tenant_id = "b308f809-2724-407a-8152-5c50ccb03b1f"
-        client_id = "3d5154df-e779-499f-bbb5-2143d9f5107a"
-        client_secret = "D3A8Q~SCsngK~Vq3LBiX2Xaf-nH7rjlhHD-sZdhx"
-
-        url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
-        data = {
-            "client_id": client_id,
-            "client_secret": client_secret,
-            "username": "contacto@tumerka.pe",
-            "password": "Peru123...",
-            "grant_type": "password",
-            "scope": "https://outlook.office365.com/.default",
-        }
-
-        headers = {"Content-Type": "application/x-www-form-urlencoded"}
-
-        response = requests.post(url, data=data, headers=headers)
-
-        if response.status_code == 200:
-            access_token = response.json().get("access_token")
-            print("✅ Token obtenido con éxito")
-            return access_token
-        else:
-            print(
-                f"❌ Error obteniendo token: {response.status_code} - {response.text}"
-            )
-            return None
+        self.message_service = MessageService()
+        self.user_service = UserService()
 
     def send_email(self, config, event_type, data, template_path):
         msg = MIMEMultipart()
         msg["From"] = config["FROM_ADDRESS"]
         msg["To"] = data.get("to_address")
-        # msg["Bcc"] = config["BCC_ADDRESS"]
         to_email = data.get("to_address")
         SENDER_EMAIL = config["OUTLOOK_USER"]
-       
-
-        # with open("dkim_private.pem", "rb") as f:
-        #     private_key = f.read()
-
-        # print(type(private_key))  # Debe mostrar: <class 'bytes'>
-        # # Crear la firma DKIM
-        # headers = [b"from", b"to", b"subject"]
-        # signature = dkim.sign(
-        #     msg.as_bytes(),
-        #     selector=b"dkim1",
-        #     domain=b"tumerka.pe",
-        #     privkey=private_key,
-        #     include_headers=headers,
-        #     length=True
-        # )
-        # print(signature.decode())
-        # msg["DKIM-Signature"] = signature.decode()
-
-        template_html = self.load_html_template(template_path)
+        template_html = load_html_template(template_path)
         body_html = None
         body_text = None
         if event_type == "welcome_new_user":
@@ -260,7 +202,9 @@ class Gmail:
 
         message_send = None
         try:
-            access_token = Gmail.get_access_token()
+            access_token = get_access_token(
+                config["OUTLOOK_USER"], config["OUTLOOK_PASS"]
+            )
             auth_string = (
                 f"user={config['OUTLOOK_USER']}\x01auth=Bearer {access_token}\x01\x01"
             )
@@ -281,14 +225,13 @@ class Gmail:
             #     server.starttls()
             #     server.login(config ["GMAIL_USER"], config["GMAIL_PASS"])
             server.send_message(msg)
-            # save_email(data, config, body_html, "Success", message_send)
             sent_at = datetime.now()  # Fecha y hora actual al enviar el correo
             received_at = None
             subject = msg["Subject"]
-            sender_user_id = self.email_service.guardar_usuario(
+            sender_user_id = self.user_service.guardar_usuario(
                 SENDER_EMAIL, "Remitente"
             )
-            email_id = self.email_service.guardar_correo(
+            email_id = self.message_service.guardar_correo(
                 sender_user_id,
                 subject,
                 body_text,
@@ -300,7 +243,7 @@ class Gmail:
                 received_at,
                 sent_at,
             )
-            self.email_service.guardar_destinatarios(
+            self.user_service.guardar_destinatarios(
                 email_id, [{"email": to_email, "type": "to"}]
             )
 
@@ -309,6 +252,224 @@ class Gmail:
         except Exception as e:
             message_send = "Error al enviar el correo: {e}"
             print(message_send)
-        #     save_email(data, config, body_html,  "Failed",  message_send)
-        # finally:
-        #     server.quit()
+        finally:
+            server.quit()
+
+    def send_email_massive_v1(self, config, data):
+        # Configuración de credenciales de correo
+        print(config)
+        SMTP_SERVER = config["OUTLOOK_HOST"]
+        SMTP_PORT = config["OUTLOOK_PORT"]
+        SENDER_EMAIL = config["OUTLOOK_USER"]
+        SENDER_PASSWORD = config["OUTLOOK_PASS"]
+
+        to_email = data.get("to_address", [])
+        subject = data.get("subject")
+        body_html = data.get("body")
+        groups = data.get("groups", [])
+        body_text = None
+        attachments = data.get("attachments", [])  # Lista de adjuntos como diccionarios
+
+        recipients_email = self.message_service.get_emails_by_groups(
+            groups if groups else None
+        )
+        emails_users = [user["email"] for user in recipients_email]
+        combined_emails = list(set(to_email + emails_users))
+        if not combined_emails:
+            return jsonify({"error": "No se especificaron destinatarios"}), 400
+        body_html = body_html.replace("\n", "<br>")
+        body_html += f"""{signatureGlobal}"""
+
+        for email_user in combined_emails:
+            sender_user_id = self.user_service.guardar_usuario(email_user, "")
+            # Crear y enviar el correo
+            message = MIMEMultipart("alternative")
+            message["From"] = config["FROM_ADDRESS"]
+            message["To"] = email_user
+            # message["Bcc"] = config["BCC_ADDRESS"]
+            # message["From"] = sender_email
+            # message["To"] = to_email
+            message["Subject"] = subject
+            message.attach(MIMEText(body_html, "html", "utf-8"))
+
+            for attachment in attachments:
+                filename = attachment["filename"]
+                file_type = attachment["file_type"]
+                file_data = base64.b64decode(attachment["file_data"])
+
+                # Añadir el archivo al correo
+                part = MIMEText(file_data, "base64")
+                part.add_header(
+                    "Content-Disposition", f'attachment; filename="{filename}"'
+                )
+                message.attach(part)
+
+            try:
+                access_token = get_access_token(
+                    config["OUTLOOK_USER"], config["OUTLOOK_PASS"]
+                )
+                auth_string = f"user={config['OUTLOOK_USER']}\x01auth=Bearer {access_token}\x01\x01"
+                auth_b64 = base64.b64encode(auth_string.encode()).decode()
+
+                server = smtplib.SMTP(host="smtp-mail.outlook.com", port=587)
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.docmd("AUTH", "XOAUTH2 " + auth_b64)
+                server.send_message(message)
+                print(f"✅ Correo enviado y guardado correctamente {email_user}")
+                time.sleep(4)
+                # return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
+            except smtplib.SMTPServerDisconnected as e:
+                print(f"❌ Error al enviar el correo: {e}")
+                # return jsonify({"error": "Error al enviar el correo"}), 500
+
+            # Guardar el correo en la base de datos
+            sent_at = datetime.now()  # Fecha y hora actual al enviar el correo
+            received_at = None
+            email_id = self.message_service.guardar_correo(
+                sender_user_id,
+                subject,
+                body_text,
+                body_html,
+                SENDER_EMAIL,
+                False,
+                "sent",
+                "sent",
+                received_at,
+                sent_at,
+            )
+
+            if email_id is None:
+                return jsonify({"error": "No se pudo guardar el correo"}), 500
+
+            # actualizar el usuario
+            self.user_service.update_send_status_user(sender_user_id)
+            # Guardar destinatarios
+            self.user_service.guardar_destinatarios(
+                email_id, [{"email": email_user, "type": "to"}]
+            )
+
+            # Guardar adjuntos
+            self.message_service.guardar_adjuntos(email_id, attachments)
+
+        print("🟩 Todos los correos fueron enviados")
+        return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
+
+    # Método para leer correos no leídos de Gmail
+    def read_emails(self, config):
+        # access_token = get_access_token(config["OUTLOOK_USER"], config["OUTLOOK_PASS"])
+        # auth_string = (
+        #     f"user={config['OUTLOOK_USER']}\x01auth=Bearer {access_token}\x01\x01"
+        # )
+        # auth_b64 = base64.b64encode(auth_string.encode()).decode()
+        server = imaplib.IMAP4_SSL(host="outlook.office365.com", timeout=60)
+        server.debug = 4
+        response = server.login(user="contacto@tumerka.pe", password="Peru123...")
+        # status_code, response = server.docmd("AUTH", "XOAUTH2 " + auth_b64)
+        # print(f"[*] Login the server: {status_code} {response}")
+        # response = server.authenticate("XOAUTH2", lambda x: auth_b64)
+        print("Autenticación exitosa:", response)
+        server.select("inbox")
+        status, messages = server.search(None, "UNSEEN")
+        mail_ids = messages[0].split()
+
+        new_emails = []
+
+        # Procesar cada correo no leído
+        for mail_id in mail_ids:
+            status, msg_data = server.fetch(mail_id, "(RFC822)")
+            for response_part in msg_data:
+                if isinstance(response_part, tuple):
+                    # Decodificar el mensaje
+                    msg = email.message_from_bytes(response_part[1])
+
+                    # Obtener el remitente y el asunto
+                    from_email = email.utils.parseaddr(msg.get("From"))[1]
+                    subject, encoding = decode_header(msg["Subject"])[0]
+                    if isinstance(subject, bytes):
+                        subject = subject.decode(encoding if encoding else "utf-8")
+
+                    # Guardar el usuario en la base de datos
+                    user_id = self.user_service.guardar_usuario(from_email, None)
+
+                    # Procesar el cuerpo del mensaje y los adjuntos
+                    body_text = None
+                    body_html = None
+                    attachments = []
+
+                    if msg.is_multipart():
+                        for part in msg.walk():
+                            content_type = part.get_content_type()
+                            content_disposition = str(part.get("Content-Disposition"))
+
+                            # Si es el cuerpo del mensaje en texto plano
+                            if (
+                                content_type == "text/plain"
+                                and "attachment" not in content_disposition
+                            ):
+                                body_text = part.get_payload(decode=True).decode()
+                            # Si es el cuerpo del mensaje en HTML
+                            elif (
+                                content_type == "text/html"
+                                and "attachment" not in content_disposition
+                            ):
+                                body_html = part.get_payload(decode=True).decode()
+                            # Si es un adjunto
+                            elif "attachment" in content_disposition:
+                                filename = part.get_filename()
+                                if filename:
+                                    file_data = part.get_payload(decode=True)
+                                    attachments.append(
+                                        {
+                                            "filename": filename,
+                                            "file_type": content_type,
+                                            "file_data": base64.b64encode(
+                                                file_data
+                                            ).decode("utf-8"),
+                                        }
+                                    )
+                    else:
+                        # Si el mensaje no es multipart, obtener el cuerpo en texto plano o HTML
+                        if msg.get_content_type() == "text/plain":
+                            body_text = msg.get_payload(decode=True).decode()
+                        elif msg.get_content_type() == "text/html":
+                            body_html = msg.get_payload(decode=True).decode()
+
+                    # Guardar el correo y los detalles en la base de datos
+                    received_at = (
+                        datetime.now()
+                    )  # Fecha y hora actual al recibir el correo
+                    sent_at = None
+
+                    email_id = self.message_service.guardar_correo(
+                        user_id,
+                        subject,
+                        body_text,
+                        body_html,
+                        from_email,
+                        True,
+                        "unread",
+                        "received",
+                        received_at,
+                        sent_at,
+                    )
+                    self.user_service.guardar_destinatarios(
+                        email_id, [{"email": from_email, "type": "from"}]
+                    )
+                    self.message_service.guardar_adjuntos(email_id, attachments)
+
+                    # Añadir el correo a la lista de nuevos correos
+                    new_emails.append(
+                        {
+                            "email_id": email_id,
+                            "subject": subject,
+                            "from": from_email,
+                            "received_at": received_at.strftime("%Y-%m-%d %H:%M:%S"),
+                        }
+                    )
+
+        # Cerrar la conexión con el servidor de Gmail
+        server.logout()
+
+        return new_emails
