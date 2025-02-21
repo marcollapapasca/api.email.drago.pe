@@ -23,5 +23,5 @@ app.register_blueprint(group_router)
 app.register_blueprint(user_router)
 
 if __name__ == "__main__":
-    print(f"✅ Enviroment selected: {os.getenv("NODE_ENV")}")
+    print(f"✅ Enviroment selected: {os.getenv('NODE_ENV')}")
     app.run(host="0.0.0.0", debug=(env == "development"), port=3006)
