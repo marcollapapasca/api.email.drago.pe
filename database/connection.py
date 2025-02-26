@@ -16,7 +16,6 @@ class Database:
                 password=os.getenv("POSTGRESQL_PASSWORD"),
             )
             self.conn.autocommit = True
-            print("✅ Conexión exitosa a la base de datos.")
         except Exception as e:
             print(f"❌ Error de conexión a la base de datos: {e}")
             self.conn = None

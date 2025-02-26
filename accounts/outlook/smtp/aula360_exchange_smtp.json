@@ -1,0 +1,7 @@
+{
+  "OUTLOOK_HOST": "smtp-mail.outlook.com",
+  "OUTLOOK_PORT": 587,
+  "OUTLOOK_USER": "noreply@drago.pe",
+  "OUTLOOK_PASS": "Peru123...",
+  "FROM_ADDRESS": "Drago <noreply@drago.pe>"
+}

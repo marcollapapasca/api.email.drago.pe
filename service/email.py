@@ -15,6 +15,7 @@ import imaplib
 import base64
 import time
 import email
+import random
 
 
 class EmailService:
@@ -197,14 +198,31 @@ class EmailService:
             body_html = template_html.replace("{{seller_name}}", seller_name)
 
             msg.attach(MIMEText(body_html, "html"))
+        elif event_type == "welcome_user":
+            msg["Subject"] = "¡Bienvenido a aula360!"
+            username = data.get("username", "Usuario")
+            body_html = template_html.replace("{{username}}", username)
+            msg.attach(MIMEText(body_html, "html", "utf-8"))
+        elif event_type == "recharge_balance":
+            msg["Subject"] = (
+                "📢 Pago confirmado: Verifica los detalles de tu transacción"
+            )
+            reference_id = data.get("id", "reference_id")
+            amount = data.get("amount", "amount")
+            date = data.get("date", "Fecha")
+            body_html = template_html.replace("{{id}}", reference_id)
+            body_html = body_html.replace("{{amount}}", f"{amount:.2f}")
+            body_html = body_html.replace("{{date}}", date)
+            msg.attach(MIMEText(body_html, "html", "utf-8"))
         else:
             print("Unknown event type")
 
         message_send = None
         try:
-            access_token = get_access_token(
-                config["OUTLOOK_USER"], config["OUTLOOK_PASS"]
-            )
+            access_token = get_access_token()
+            if not access_token:
+                return
+
             auth_string = (
                 f"user={config['OUTLOOK_USER']}\x01auth=Bearer {access_token}\x01\x01"
             )
@@ -212,14 +230,11 @@ class EmailService:
 
             server = smtplib.SMTP(host="smtp-mail.outlook.com", port=587)
             status_code, response = server.ehlo()
-            print(f"[*] Echoing the server: {status_code} {response}")
             status_code, response = server.starttls()
-            server.debuglevel = 4
-            print(f"[*] Starting TLS the server: {status_code} {response}")
-            status_code, response = server.ehlo()
-            print(f"[*] Echoing the server: {status_code} {response}")
-            status_code, response = server.docmd("AUTH", "XOAUTH2 " + auth_b64)
-            print(f"[*] Login the server: {status_code} {response}")
+            # status_code, response = server.ehlo()
+            status_code, response = server.login(
+                config["OUTLOOK_USER"], config["OUTLOOK_PASS"]
+            )
 
             #     server = smtplib.SMTP(host=config["GMAIL_HOST"], port=config["GMAIL_PORT"])
             #     server.starttls()
@@ -256,105 +271,140 @@ class EmailService:
             server.quit()
 
     def send_email_massive_v1(self, config, data):
-        # Configuración de credenciales de correo
-        print(config)
-        SMTP_SERVER = config["OUTLOOK_HOST"]
-        SMTP_PORT = config["OUTLOOK_PORT"]
-        SENDER_EMAIL = config["OUTLOOK_USER"]
-        SENDER_PASSWORD = config["OUTLOOK_PASS"]
+        MAX_CORREOS_POR_CONEXION = 29
+        try:
+            # Configuración de credenciales de correo
+            SMTP_SERVER = config["OUTLOOK_HOST"]
+            SMTP_PORT = config["OUTLOOK_PORT"]
+            SENDER_EMAIL = config["OUTLOOK_USER"]
+            SENDER_PASSWORD = config["OUTLOOK_PASS"]
 
-        to_email = data.get("to_address", [])
-        subject = data.get("subject")
-        body_html = data.get("body")
-        groups = data.get("groups", [])
-        body_text = None
-        attachments = data.get("attachments", [])  # Lista de adjuntos como diccionarios
+            to_email = data.get("to_address", [])
+            subject = data.get("subject")
+            body_html = data.get("body")
+            groups = data.get("groups", [])
+            body_text = None
+            attachments = data.get(
+                "attachments", []
+            )  # Lista de adjuntos como diccionarios
 
-        recipients_email = self.message_service.get_emails_by_groups(
-            groups if groups else None
-        )
-        emails_users = [user["email"] for user in recipients_email]
-        combined_emails = list(set(to_email + emails_users))
-        if not combined_emails:
-            return jsonify({"error": "No se especificaron destinatarios"}), 400
-        body_html = body_html.replace("\n", "<br>")
-        body_html += f"""{signatureGlobal}"""
-
-        for email_user in combined_emails:
-            sender_user_id = self.user_service.guardar_usuario(email_user, "")
-            # Crear y enviar el correo
-            message = MIMEMultipart("alternative")
-            message["From"] = config["FROM_ADDRESS"]
-            message["To"] = email_user
-            # message["Bcc"] = config["BCC_ADDRESS"]
-            # message["From"] = sender_email
-            # message["To"] = to_email
-            message["Subject"] = subject
-            message.attach(MIMEText(body_html, "html", "utf-8"))
-
-            for attachment in attachments:
-                filename = attachment["filename"]
-                file_type = attachment["file_type"]
-                file_data = base64.b64decode(attachment["file_data"])
-
-                # Añadir el archivo al correo
-                part = MIMEText(file_data, "base64")
-                part.add_header(
-                    "Content-Disposition", f'attachment; filename="{filename}"'
-                )
-                message.attach(part)
-
-            try:
-                access_token = get_access_token(
-                    config["OUTLOOK_USER"], config["OUTLOOK_PASS"]
-                )
-                auth_string = f"user={config['OUTLOOK_USER']}\x01auth=Bearer {access_token}\x01\x01"
-                auth_b64 = base64.b64encode(auth_string.encode()).decode()
-
-                server = smtplib.SMTP(host="smtp-mail.outlook.com", port=587)
-                server.ehlo()
-                server.starttls()
-                server.ehlo()
-                server.docmd("AUTH", "XOAUTH2 " + auth_b64)
-                server.send_message(message)
-                print(f"✅ Correo enviado y guardado correctamente {email_user}")
-                time.sleep(4)
-                # return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
-            except smtplib.SMTPServerDisconnected as e:
-                print(f"❌ Error al enviar el correo: {e}")
-                # return jsonify({"error": "Error al enviar el correo"}), 500
-
-            # Guardar el correo en la base de datos
-            sent_at = datetime.now()  # Fecha y hora actual al enviar el correo
-            received_at = None
-            email_id = self.message_service.guardar_correo(
-                sender_user_id,
-                subject,
-                body_text,
-                body_html,
-                SENDER_EMAIL,
-                False,
-                "sent",
-                "sent",
-                received_at,
-                sent_at,
+            recipients_email = self.message_service.get_emails_by_groups(
+                groups if groups else None
             )
+            emails_users = [user["email"] for user in recipients_email]
+            combined_emails = list(set(to_email + emails_users))
+            if not combined_emails:
+                return jsonify({"error": "No se especificaron destinatarios"}), 400
 
-            if email_id is None:
-                return jsonify({"error": "No se pudo guardar el correo"}), 500
+            body_html = body_html.replace("\n", "<br>")
+            body_html += f"""{signatureGlobal}"""
 
-            # actualizar el usuario
-            self.user_service.update_send_status_user(sender_user_id)
-            # Guardar destinatarios
-            self.user_service.guardar_destinatarios(
-                email_id, [{"email": email_user, "type": "to"}]
+            for i, email_user in enumerate(combined_emails, start=1):
+                if i % MAX_CORREOS_POR_CONEXION == 1:
+                    server = smtplib.SMTP(host="smtp-mail.outlook.com", port=587)
+                    server.ehlo()
+                    server.starttls()
+                    server.login(SENDER_EMAIL, SENDER_PASSWORD)
+                    print("✅ Nueva conexión SMTP establecida.")
+                try:
+                    sender_user_id = self.user_service.guardar_usuario(email_user, "")
+                    # Crear y enviar el correo
+                    message = MIMEMultipart("alternative")
+                    message["From"] = config["FROM_ADDRESS"]
+                    message["To"] = email_user
+                    message["Subject"] = subject
+                    message.attach(MIMEText(body_html, "html", "utf-8"))
+
+                    for attachment in attachments:
+                        filename = attachment["filename"]
+                        file_type = attachment["file_type"]
+                        file_data = base64.b64decode(attachment["file_data"])
+
+                        # Añadir el archivo al correo
+                        part = MIMEText(file_data, "base64")
+                        part.add_header(
+                            "Content-Disposition", f'attachment; filename="{filename}"'
+                        )
+                        message.attach(part)
+
+                    server.sendmail(
+                        config["FROM_ADDRESS"], email_user, message.as_string()
+                    )
+                    print(f"📨 Enviado {i}/{len(combined_emails)} a {email_user}")
+                except smtplib.SMTPResponseException as e:
+                    error_code = e.smtp_code
+                    error_message = (
+                        e.smtp_error.decode()
+                        if isinstance(e.smtp_error, bytes)
+                        else str(e.smtp_error)
+                    )
+                    print(f"❌ Error en {email_user}: {error_code} - {error_message}")
+                    # Detectar si el correo no existe
+                    if error_code == 550 and "User unknown" in error_message:
+                        print(
+                            f"⚠️ El correo {email_user} no existe. Eliminándolo de la lista."
+                        )
+
+                    # Detectar si la cuenta ha sido bloqueada
+                    elif error_code in [421, 550, 554]:
+                        print("⚠️ Cuenta posiblemente bloqueada. Deteniendo el envío.")
+                        time.sleep(300)  # Espera 5 minutos antes de continuar
+                    # Detectar bloqueo de cuenta
+                    elif error_code in [550, 554] and "policy" in error_message.lower():
+                        print(
+                            "🚨 Cuenta posiblemente bloqueada por políticas de spam. Deteniendo el envío."
+                        )
+                        break  # Detiene el envío masivo
+
+                # Guardar el correo en la base de datos
+                sent_at = datetime.now()  # Fecha y hora actual al enviar el correo
+                received_at = None
+                email_id = self.message_service.guardar_correo(
+                    sender_user_id,
+                    subject,
+                    body_text,
+                    body_html,
+                    SENDER_EMAIL,
+                    False,
+                    "sent",
+                    "sent",
+                    received_at,
+                    sent_at,
+                )
+
+                # if email_id is None:
+                #     return jsonify({"error": "No se pudo guardar el correo"}), 500
+
+                # actualizar el usuario
+                self.user_service.update_send_status_user(sender_user_id)
+                # Guardar destinatarios
+                self.user_service.guardar_destinatarios(
+                    email_id, [{"email": email_user, "type": "to"}]
+                )
+
+                # Guardar adjuntos
+                self.message_service.guardar_adjuntos(email_id, attachments)
+
+                # Control de tasa de envío para evitar bloqueos
+                if i % 29 == 0:
+                    print("⏳ Esperando 1 minuto para evitar bloqueo...")
+                    time.sleep(60)  # Espera 10 minutos cada 800 correos
+                else:
+                    time.sleep(random.uniform(3, 6))  # Pausa de 2.7 segundos entre correos
+
+                 # Cerrar y reabrir la conexión cada cierto número de correos
+                if i % MAX_CORREOS_POR_CONEXION == 0 or i == len(combined_emails):
+                    server.quit()
+                    print("🔴 Conexión SMTP cerrada temporalmente para evitar bloqueos.")
+                    time.sleep(10)  # Espera antes de abrir otra conexión
+            print(
+                "✅ Todos los correos fueron enviados, finalizado y conexión cerrada."
             )
-
-            # Guardar adjuntos
-            self.message_service.guardar_adjuntos(email_id, attachments)
-
-        print("🟩 Todos los correos fueron enviados")
-        return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
+        except smtplib.SMTPAuthenticationError as e:
+            print("🚨 La cuenta está BLOQUEADA o la contraseña es incorrecta.")
+        except Exception as e:
+            print(f"⚠️ Error desconocido: {e}")
+        # return jsonify({"message": "Correo enviado y guardado correctamente"}), 200
 
     # Método para leer correos no leídos de Gmail
     def read_emails(self, config):

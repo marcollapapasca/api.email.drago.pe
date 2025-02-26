@@ -1,28 +1,30 @@
 import requests
+import msal
+
+def get_access_token():
+    TENANT_ID = "b308f809-2724-407a-8152-5c50ccb03b1f"
+    CLIENT_ID = "3d5154df-e779-499f-bbb5-2143d9f5107a"
+    CLIENT_SECRET = "s768Q~us6GVyqiA~MQGKZzg-tCPYh3GxSd2GuaFk"
+    AUTHORITY_URL = f"https://login.microsoftonline.com/{TENANT_ID}"
+    SCOPES = ["https://outlook.office365.com/.default"]
+
+    app = msal.ConfidentialClientApplication(
+        CLIENT_ID,
+        authority=AUTHORITY_URL,
+        client_credential=CLIENT_SECRET
+    )
 
 
-def get_access_token(username, password):
-    tenant_id = "b308f809-2724-407a-8152-5c50ccb03b1f"
-    client_id = "3d5154df-e779-499f-bbb5-2143d9f5107a"
-    client_secret = "D3A8Q~SCsngK~Vq3LBiX2Xaf-nH7rjlhHD-sZdhx"
+    result = None
+    result = app.acquire_token_silent(SCOPES, account=None)
 
-    url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
-    data = {
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "username": username,
-        "password": password,
-        "grant_type": "password",
-        "scope": "https://outlook.office365.com/.default",
-    }
+    if not result:
+        print("No suitable token exists in cache. Let's get a new one from AAD.")
+        result = app.acquire_token_for_client(SCOPES)
 
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-
-    response = requests.post(url, data=data, headers=headers)
-
-    if response.status_code == 200:
-        access_token = response.json().get("access_token")
-        return access_token
+    if "access_token" in result:
+        print("✅ Token obtenido correctamente:", result["access_token"][:20], "...")
+        return result["access_token"]
     else:
-        print(f"❌ Error obteniendo token: {response.status_code} - {response.text}")
+        print("❌ Error al obtener el token:", result.get("error_description"))
         return None
