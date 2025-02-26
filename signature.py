@@ -14,10 +14,6 @@ signatureGlobal = """
     <td>3️⃣ Denisse Ruíz</td>
     <td><a href="https://wa.me/51960370846">📱(+51) 960 370 846</a></td>
   </tr>
-  <tr>
-    <td>4️⃣ Omar Prado</td>
-    <td><a href="https://wa.me/51948845033">📱(+51) 948 845 033</a></td>
-  </tr>
 </table>
 
 <table>
