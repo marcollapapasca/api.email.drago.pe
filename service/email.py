@@ -9,7 +9,7 @@ from flask import jsonify
 from datetime import datetime
 from utils.utils import load_html_template
 from service.msal import get_access_token
-from signature import signatureGlobal
+from signature import signatureGlobal, signatureOther
 import smtplib
 import imaplib
 import base64
@@ -295,16 +295,21 @@ class EmailService:
             combined_emails = list(set(to_email + emails_users))
             if not combined_emails:
                 return jsonify({"error": "No se especificaron destinatarios"}), 400
-
-            body_html = body_html.replace("\n", "<br>")
-            body_html += f"""{signatureGlobal}"""
+            print(combined_emails)
+            
+            if "</body>" in body_html:
+                body_html = body_html.replace("</body>", f"{signatureOther}</body>")
+            else:
+                body_html = body_html.replace("\n", "<br>")
+                body_html += signatureGlobal  # En caso de que no haya </body>, se agrega al final
 
             for i, email_user in enumerate(combined_emails, start=1):
                 if i % MAX_CORREOS_POR_CONEXION == 1:
                     server = smtplib.SMTP(host="smtp-mail.outlook.com", port=587)
                     server.ehlo()
                     server.starttls()
-                    server.login(SENDER_EMAIL, SENDER_PASSWORD)
+                    data = server.login(SENDER_EMAIL, SENDER_PASSWORD)
+                    print(data)
                     print("✅ Nueva conexión SMTP establecida.")
                 try:
                     sender_user_id = self.user_service.guardar_usuario(email_user, "")
@@ -327,9 +332,7 @@ class EmailService:
                         )
                         message.attach(part)
 
-                    server.sendmail(
-                        config["FROM_ADDRESS"], email_user, message.as_string()
-                    )
+                    server.send_message(message)
                     print(f"📨 Enviado {i}/{len(combined_emails)} a {email_user}")
                 except smtplib.SMTPResponseException as e:
                     error_code = e.smtp_code
