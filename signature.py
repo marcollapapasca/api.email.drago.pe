@@ -1,21 +1,4 @@
 signatureGlobal = """
-<br>
-<p>Nos puede contactar a:</p>
-<table>
-  <tr>
-    <td>1️⃣ Marco Llapapasca</td>
-    <td><a href="https://wa.me/51923367852">📱(+51) 973 777 853</a></td>
-  </tr>
-  <tr>
-    <td>2️⃣ Katherine Díaz</td>
-    <td><a href="https://wa.me/51923367852">📱(+51) 923 367 852</a></td>
-  </tr>
-  <tr>
-    <td>3️⃣ Denisse Ruíz</td>
-    <td><a href="https://wa.me/51960370846">📱(+51) 960 370 846</a></td>
-  </tr>
-</table>
-
 <table>
   <tr>
     <td style="padding-right:10px; border-right: 1px solid #000"">
@@ -28,7 +11,7 @@ signatureGlobal = """
         CORPORACIÓN GRUPO DRAGO S.A.C <br>
         RUC: 20608386387<br>
         <a class="flex" href="mailto:contacto@drago.pe">contacto@drago.pe</a><br>
-        <span>980 547 955</span>
+        <span>925 011 474</span>
       </strong>
     </td>
   </tr>
@@ -49,6 +32,8 @@ signatureOther = """
         CORPORACIÓN GRUPO DRAGO S.A.C <br>
         RUC: 20608386387<br>
       </strong>
+      <a class="flex" href="mailto:contacto@drago.pe">contacto@drago.pe</a><br>
+      <span>+51 925 011 474</span>
     </td>
   </tr>
 </table>
