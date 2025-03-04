@@ -332,8 +332,9 @@ class EmailService:
                         )
                         message.attach(part)
 
+                    now = datetime.datetime.now().time()
                     server.send_message(message)
-                    print(f"📨 Enviado {i}/{len(combined_emails)} a {email_user}")
+                    print(f"{now} 📨 Enviado {i}/{len(combined_emails)} a {email_user}")
                 except smtplib.SMTPResponseException as e:
                     error_code = e.smtp_code
                     error_message = (
@@ -389,11 +390,11 @@ class EmailService:
                 self.message_service.guardar_adjuntos(email_id, attachments)
 
                 # Control de tasa de envío para evitar bloqueos
-                if i % 29 == 0:
+                if i % MAX_CORREOS_POR_CONEXION == 0:
                     print("⏳ Esperando 1 minuto para evitar bloqueo...")
                     time.sleep(60)  # Espera 10 minutos cada 800 correos
                 else:
-                    time.sleep(random.uniform(3, 6))  # Pausa de 2.7 segundos entre correos
+                    time.sleep(6)  # Pausa de 2.7 segundos entre correos
 
                  # Cerrar y reabrir la conexión cada cierto número de correos
                 if i % MAX_CORREOS_POR_CONEXION == 0 or i == len(combined_emails):
