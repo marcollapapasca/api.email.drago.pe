@@ -332,7 +332,7 @@ class EmailService:
                         )
                         message.attach(part)
 
-                    now = datetime.datetime.now().time()
+                    now = datetime.now().time()
                     server.send_message(message)
                     print(f"{now} 📨 Enviado {i}/{len(combined_emails)} a {email_user}")
                 except smtplib.SMTPResponseException as e:
