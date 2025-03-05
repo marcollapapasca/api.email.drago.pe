@@ -11,65 +11,66 @@
         padding: 0;
         background-color: #f4f4f4;
       }
-      .container {
+      table {
         width: 600px;
-        margin: auto;
-        overflow: hidden;
+        margin: 0 auto;
+        background-color: #fff;
+        border-collapse: collapse;
       }
       .header {
-        background-color: #ff9191;
+        background-color: #1e3a8a;
         color: #fff;
-        padding: 8px 0;
         text-align: center;
+        padding: 8px 0;
       }
       .content {
-        background-color: #fff;
         padding: 20px;
       }
       .footer {
-        background-color: #ff9191;
+        background-color: #1e3a8a;
         color: #fff;
         text-align: center;
         padding: 20px 0;
       }
-      .button {
-        display: inline-block;
-        background-color: #ff9191;
-        color: #fff;
-        padding: 10px 20px;
-        text-decoration: none;
-        border-radius: 5px;
-      }
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="header">
-        <h1>AULA 360</h1>
-      </div>
-      <div class="content">
-        <h2>¡Bienvenido!</h2>
-        <p>
-          Hola {{username}}, gracias por unirte a <a style="color: black;" href="https://aula360.drago.pe/">Aula360</a> Estamos emocionados
-          de tenerte con nosotros y de que comiences a aprovechar todas las
-          herramientas que ofrecemos.
-        </p>
-        <p>
-          Si necesitas ayuda para comenzar o tienes alguna duda, no dudes en
-          ponerte en contacto con nuestro equipo de soporte a través de
-          <a href="mailto:contacto@drago.pe">contacto@drago.pe</a> Estamos aquí
-          para asistirte en cada paso del camino.
-        </p>
-        <p>
-          ¡Esperamos que disfrutes de la experiencia y encuentres todo lo que
-          necesitas para llevar tu enseñanza al siguiente nivel!
-        </p>
-        <p>
-          Saludos cordiales,<br />
-          El equipo de Aula 360
-        </p>
-      </div>
-      <div class="footer"></div>
-    </div>
+    <table>
+      <tr>
+        <td class="header">
+          <img src="https://aula360.drago.pe/aula_360_sidebar.png" alt="logo de aula360" width="100"/>
+        </td>
+      </tr>
+      <tr>
+        <td class="content">
+          <h2><strong>¡Bienvenido, {{username}}!</strong></h2>
+          <p>
+            Gracias por unirte a
+            <a style="color: black" href="https://aula360.drago.pe/">Aula360</a>
+            Estamos encantados de tenerte con nosotros y de acompañarte en esta
+            nueva experiencia. Con nuestras herramientas y recursos, podrás llevar
+            tu enseñanza al siguiente nivel.
+          </p>
+          <p>
+            Si necesitas ayuda para comenzar o tienes alguna consulta, no dudes en
+            contactar a nuestro equipo de soporte en
+            <a href="mailto:contacto@drago.pe">contacto@drago.pe</a>. Estamos aquí
+            para asistirte en cada paso del camino.
+          </p>
+          <p>
+            Visita nuestra web para explorar todo lo que tenemos para ti:
+            <a href="https://aula360.drago.pe/">Sitio web de Aula360</a>
+          </p>
+          <p>¡Esperamos que disfrutes la experiencia!</p>
+          <p>
+            <strong>Saludos cordiales,</strong><br />
+            El equipo de <strong>Aula 360</strong>
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td class="footer"></td>
+      </tr>
+    </table>
   </body>
 </html>
