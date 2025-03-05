@@ -11,7 +11,6 @@ signatureGlobal = """
         CORPORACIÓN GRUPO DRAGO S.A.C <br>
         RUC: 20608386387<br>
         <a class="flex" href="mailto:contacto@drago.pe">contacto@drago.pe</a><br>
-        <span>925 011 474</span>
       </strong>
     </td>
   </tr>
@@ -33,7 +32,6 @@ signatureOther = """
         RUC: 20608386387<br>
       </strong>
       <a class="flex" href="mailto:contacto@drago.pe">contacto@drago.pe</a><br>
-      <span>+51 925 011 474</span>
     </td>
   </tr>
 </table>
